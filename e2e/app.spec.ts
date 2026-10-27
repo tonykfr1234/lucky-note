@@ -18,6 +18,8 @@ async function newTravel(page: Page) {
   await page.getByRole('button', { name: 'New note', exact: true }).filter({visible:true}).first().click();
   await page.getByRole('button', {name:/Travel planner/}).click();
   await expect(page.getByLabel('Note title', {exact:true})).toBeVisible();
+  await expect(page.getByLabel('Note content editor', {exact:true})).toBeVisible();
+  await expect(page.locator('.collaboration-status')).toHaveAttribute('data-state', 'synced');
 }
 async function noOverflow(page: Page) {
   const size = await page.evaluate(() => ({width:innerWidth, scroll:document.documentElement.scrollWidth}));
@@ -26,16 +28,28 @@ async function noOverflow(page: Page) {
 test('real registration, editable template, save, persistence, search and empty state', async ({page}) => {
   const crashes: string[] = []; page.on('pageerror', error => crashes.push(error.message));
   await register(page); await newTravel(page);
+  const task = page.getByRole('checkbox').first();
+  await task.check();
+  await expect(task).toBeChecked();
+  await expect(page.locator('.collaboration-status')).toHaveAttribute('data-state', 'synced');
   await page.getByLabel('Note title', {exact:true}).fill('Kyoto / shared memories');
-  await page.getByRole('button', {name:'Markdown', exact:true}).click();
-  await page.getByLabel('Markdown content').fill('# Kyoto travel plan\n- [ ] Book train\n- [ ] Tea for friends | Qty: 2 | Currency: JPY | Status: pending\n');
+  const editor = page.getByLabel('Note content editor', {exact:true});
+  await editor.fill('Kyoto travel plan\nBook train\nTea for friends | Qty: 2 | Currency: JPY | Status: pending');
+  await expect(editor).toContainText('Book train');
+  await editor.press('ControlOrMeta+A');
+  await page.getByRole('button', {name:'Bold', exact:true}).click();
+  await expect(editor.locator('strong').first()).toContainText('Kyoto travel plan');
+  await expect(page.locator('.collaboration-status')).toHaveAttribute('data-state', 'synced');
   await page.getByLabel('Tags (comma separated)').fill('travel, 2026');
   await page.getByRole('button', {name:'Save', exact:true}).click();
   await expect(page.getByRole('button', {name:'Save', exact:true})).toBeDisabled();
   await page.reload();
   await page.getByRole('button', {name:/Kyoto \/ shared memories/}).click();
   await expect(page.getByLabel('Note title')).toHaveValue('Kyoto / shared memories');
+  await expect(page.locator('.collaboration-status')).toHaveAttribute('data-state', 'synced');
+  await expect(page.getByLabel('Note content editor', {exact:true})).toContainText('Book train');
   await page.getByRole('button', {name:'Markdown', exact:true}).click();
+  await expect(page.getByLabel('Markdown content')).toHaveJSProperty('readOnly', true);
   await expect(page.getByLabel('Markdown content')).toHaveValue(/Book train/);
   mkdirSync('artifacts', {recursive:true});
   await page.screenshot({path:'artifacts/desktop-editor.png', fullPage:true});
@@ -84,8 +98,8 @@ test('handwriting undo/redo saves editable strokes and protected PNG attachment'
   const box = await canvas.boundingBox(); expect(box).not.toBeNull();
   await page.mouse.move(box!.x+50,box!.y+80); await page.mouse.down();
   await page.mouse.move(box!.x+220,box!.y+160,{steps:12}); await page.mouse.up();
-  await page.getByRole('button',{name:/Undo/}).click();
-  await page.getByRole('button',{name:/Redo/}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'Undo',exact:true}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'Redo',exact:true}).click();
   await page.getByRole('button',{name:'Save to note',exact:true}).click();
   await expect(page.getByLabel('Freehand drawing canvas')).not.toBeVisible();
   await expect(page.locator('.attachment img')).toHaveCount(1);
@@ -107,7 +121,8 @@ test('conflicting update preserves the browser draft and PWA avoids private cach
   const list=await (await page.request.get(`/api/workspaces/${spaces.workspaces[0].id}/notes`)).json();
   const note=list.notes[0];
   await page.getByLabel('Note title').fill('My unsaved draft');
-  const response=await page.request.patch(`/api/notes/${note.id}`,{headers:{'X-CSRF-Token':session.csrfToken,Origin:'http://127.0.0.1:4318'},data:{...note,title:'Remote collaborator version',version:note.version}});
+  expect(Number.isInteger(note.metadataVersion)).toBeTruthy();
+  const response=await page.request.patch(`/api/notes/${note.id}`,{headers:{'X-CSRF-Token':session.csrfToken,Origin:'http://127.0.0.1:4318'},data:{title:'Remote collaborator version',tags:note.tags,notebookId:note.notebookId,metadataVersion:note.metadataVersion}});
   expect(response.ok()).toBeTruthy();
   await page.getByRole('button',{name:'Save',exact:true}).click();
   await expect(page.getByLabel('Note title')).toHaveValue('My unsaved draft');
@@ -116,4 +131,21 @@ test('conflicting update preserves the browser draft and PWA avoids private cach
   expect(manifest.display).toBe('standalone');
   const privateCached=await page.evaluate(async()=>{const keys=await caches.keys();const all=await Promise.all(keys.map(async key=>(await(await caches.open(key)).keys()).map(r=>r.url)));return all.flat().filter(url=>new URL(url).pathname.startsWith('/api/'));});
   expect(privateCached).toEqual([]);
+});
+
+
+test('browser Back closes app surfaces and preserves a draft when cancelled', async ({page}) => {
+  await register(page); await newTravel(page);
+  await page.getByLabel('Note title', {exact:true}).fill('Keep this unsaved title');
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.goBack();
+  await expect(page.getByLabel('Note title', {exact:true})).toHaveValue('Keep this unsaved title');
+  page.once('dialog', dialog => dialog.accept());
+  await page.goBack();
+  await expect(page.getByLabel('Note title', {exact:true})).not.toBeVisible();
+  await page.getByRole('button', {name:/Settings & profile/}).first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.getByLabel('Search notes', {exact:true})).toBeVisible();
 });

@@ -1,8 +1,14 @@
-import { test, expect, devices } from '@playwright/test';
+import { test, expect, devices, type Page } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 test.use({ locale: 'en-US' });
+async function syncedEditor(page: Page) {
+  const editor = page.getByLabel('筆記內容編輯器', { exact: true });
+  await expect(editor).toBeVisible();
+  await expect(page.locator('.collaboration-status')).toHaveAttribute('data-state', 'synced');
+  return editor;
+}
 test('Traditional Chinese populated workspace, readable mobile document and real shared ledger', async ({ page, browser }) => {
   test.setTimeout(90000);
   const errors: string[] = [];
@@ -54,6 +60,7 @@ test('Traditional Chinese populated workspace, readable mobile document and real
   await expect(page.getByRole('button', { name: /京都採買｜把心意帶回家/ })).toBeVisible();
   await page.getByRole('button', { name: /京都採買｜把心意帶回家/ }).click();
   await expect(page.getByLabel('文件編輯器')).toBeVisible();
+  const desktopEditor = await syncedEditor(page);
   await expect(page.getByLabel('Markdown 內容')).not.toBeVisible();
   await expect(page.getByRole('checkbox')).toHaveCount(4);
   mkdirSync('docs/screenshots', { recursive: true });
@@ -63,7 +70,13 @@ test('Traditional Chinese populated workspace, readable mobile document and real
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  expect(await page.locator('.block-input').first().evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
+  expect(await desktopEditor.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
+  const mobileParagraph = desktopEditor.locator('p').filter({ hasText: /\S/ }).first();
+  await mobileParagraph.scrollIntoViewIfNeeded();
+  await expect(mobileParagraph).toBeInViewport();
+  const paragraphSize = await mobileParagraph.evaluate(node => ({ client: node.clientWidth, scroll: node.scrollWidth, lineHeight: parseFloat(getComputedStyle(node).lineHeight), height: node.getBoundingClientRect().height }));
+  expect(paragraphSize.scroll).toBeLessThanOrEqual(paragraphSize.client + 1);
+  expect(paragraphSize.height).toBeGreaterThanOrEqual(paragraphSize.lineHeight - 1);
   await page.screenshot({ path: 'docs/screenshots/mobile-shopping-zh.png', fullPage: true });
   await page.getByLabel('關閉筆記').click();
   await page.getByLabel('開啟選單').click();
@@ -120,16 +133,22 @@ test('Traditional Chinese populated workspace, readable mobile document and real
     await phone.getByLabel('選擇工作空間').selectOption(workspace.id);
     await phone.getByRole('button', { name: /京都採買｜把心意帶回家/ }).tap();
     await expect(phone.getByLabel('文件編輯器')).toBeVisible();
+    const phoneEditor = await syncedEditor(phone);
     expect(await phone.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(layout.viewport.width + 1);
     await phone.screenshot({ path: `docs/screenshots/${layout.name}.png`, fullPage: true });
     if (layout.name === 'iphone16-pro-max-portrait' || layout.name === 'galaxy-s26-360-portrait') {
       await phone.setViewportSize({ width: layout.viewport.width, height: 500 });
-      const block = phone.getByLabel('區塊 7', { exact: true });
-      await block.scrollIntoViewIfNeeded(); await block.tap();
-      await block.fill((await block.inputValue()) + '（已確認）');
-      const save = phone.getByRole('button', { name: '儲存', exact: true });
-      await expect(save).toBeVisible(); await save.tap();
-      await expect(save).toBeDisabled();
+      const paragraph = phoneEditor.locator('p').filter({ hasText: /\S/ }).last();
+      await paragraph.scrollIntoViewIfNeeded();
+      await expect(paragraph).toBeInViewport();
+      await paragraph.tap();
+      await phone.keyboard.press('ControlOrMeta+End');
+      const confirmationText = layout.name === 'iphone16-pro-max-portrait' ? '（iPhone 已確認）' : '（Galaxy 已確認）';
+      await phone.keyboard.insertText(confirmationText);
+      await expect(phoneEditor).toContainText(confirmationText);
+      await expect(phone.locator('.collaboration-status')).toHaveAttribute('data-state', 'synced');
+      // Body edits synchronize through CRDT; metadata Save is not their persistence mechanism.
+      await expect(phone.getByRole('button', { name: '儲存', exact: true })).toBeDisabled();
     }
     await context.close();
   }

@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { DatabaseSync } from 'node:sqlite';
 
 export type Role = 'owner' | 'editor' | 'viewer';
-export interface User { id: string; name: string; email: string; avatar: string }
+export interface User { id: string; name: string; email: string; avatar: string; emailVerified?: boolean; identityProvider?: 'google' | 'local' }
 export interface Membership {
   id: string; workspaceId: string; userId: string; role: Role;
   type: 'private' | 'group'; name: string;

@@ -12,8 +12,8 @@
 | [Notesnook](https://github.com/streetwriters/notesnook) | 14.8k | 私人筆記體驗與安全定位 | 研究參考；不宣稱本產品具有相同加密特性 |
 | [SiYuan](https://github.com/siyuan-note/siyuan) | 47k | 區塊組織與知識連結 | 後續資料結構參考 |
 | [TriliumNext](https://github.com/TriliumNext/Trilium) | 38.6k | 階層筆記與個人知識庫 | 後續筆記階層參考 |
-| [Tiptap](https://github.com/ueberdosis/tiptap) | 38.9k | 可擴充 rich-text editor core | 可替換的後續 editor 候選，當前未納入 |
-| [Yjs](https://github.com/yjs/yjs) | 23k | CRDT 文件同步 | 未納入；本版為 SSE＋樂觀版本控制 |
+| [Tiptap](https://github.com/ueberdosis/tiptap) | 38.9k | 可擴充 rich-text editor core | 0.2 已採用 MIT core 3.32.0，文件富文字與共用 schema |
+| [Yjs](https://github.com/yjs/yjs) | 23k | CRDT 文件同步 | 0.2 已採用 13.6.33，搭配 Hocuspocus 4.7.1、後端 ACL 與持久化 journal |
 | [Excalidraw](https://github.com/excalidraw/excalidraw) | 134.6k | 白板與圖形編輯 | 未納入；本版是自建手寫 canvas |
 
 採獨立 React／Node／SQLite 的原因是安裝路徑短、資料模型和 ACL 可直接驗證、外部整合可單獨測試。代價是第一版沒有成熟上游產品的所有 editor、白板、資料庫、離線協作功能。未完成部分列入路線圖，不用視覺相似度冒充功能相同。
@@ -23,11 +23,11 @@
 - AFFiNE 根目錄 LICENSE 對 `packages/backend` 和 `packages/common/native` 明訂例外，不能直接把整個專案稱為 MIT。Backend 文件區分 CE 的 MPL 2.0 與 EE 的額外商業條件。[根 LICENSE](https://github.com/toeverything/AFFiNE/blob/canary/LICENSE)、[backend LICENSE](https://github.com/toeverything/AFFiNE/blob/canary/packages/backend/server/LICENSE)
 - AppFlowy-Cloud 的 GitHub 頁面標示於 2026-09-11 封存為唯讀；SelfHost-Commercial 明列其商業授權。因此沒有將封存的 Cloud 庫當成持續維護中的現行部署基礎。[Cloud](https://github.com/AppFlowy-IO/AppFlowy-Cloud)、[SelfHost-Commercial](https://github.com/AppFlowy-IO/AppFlowy-SelfHost-Commercial)
 - Joplin 的 server 目錄有自己的授權文件，評估託管服務時需查看該檔，不能只看主 repo 標籤。[Joplin server LICENSE](https://github.com/laurent22/joplin/blob/dev/packages/server/LICENSE.md)
-- Tiptap、Yjs、Excalidraw 的開源 core 可作後續元件候選；商業 extension、託管服務和商標仍需個別確認。實際引入前應對鎖定 tag／commit 再核對授權，而不是沿用此日分支結論。[Tiptap LICENSE](https://github.com/ueberdosis/tiptap/blob/main/LICENSE.md)、[Yjs LICENSE](https://github.com/yjs/yjs/blob/main/LICENSE)、[Excalidraw LICENSE](https://github.com/excalidraw/excalidraw/blob/master/LICENSE)
+- Tiptap、Yjs、Hocuspocus 的實際鎖定套件已核對 MIT 授權，列於 `THIRD_PARTY_NOTICES.md` 與 `docs/DEPENDENCIES.json`；未採用商業 extensions 或託管服務。Excalidraw 仍是候選，未納入。[Tiptap LICENSE](https://github.com/ueberdosis/tiptap/blob/main/LICENSE.md)、[Yjs LICENSE](https://github.com/yjs/yjs/blob/main/LICENSE)、[Excalidraw LICENSE](https://github.com/excalidraw/excalidraw/blob/master/LICENSE)
 
 GPL、AGPL 等自由軟體授權不等於禁止商業使用；需遵守適用的再散布、修改、對應原始碼與網路使用條件。自訂 server／商業授權的限制是另一件事。此處記錄工程選型依據，不替代特定商業部署的法律審查。
 
-本專案沒有複製上述產品的 UI 素材、商標或程式碼。已安裝依賴的實際版本與授權應由 lockfile 和發行時的授權清單核對；研究表不能當作 NOTICE。
+本專案沒有複製參考筆記產品的 UI 素材、商標或整套程式碼；使用的編輯器與同步套件依其授權整合。已安裝依賴的實際版本與授權由 lockfile 和發行時的授權清單核對；研究表不能當作 NOTICE。
 
 ## Google：身份、檔案與相簿
 

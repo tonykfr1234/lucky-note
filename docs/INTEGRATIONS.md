@@ -93,3 +93,9 @@ Token 上限是使用量防護，不是準確的金額報價。模型價格、�
 - [LINE Pay 商家 API](https://developers-pay.line.me/online-api-v4)：不當作第三方 P2P 分帳轉帳 API。
 
 測試以 `npm test` 執行。mock fetch 只驗證 request contract、權限、去重、失敗分支與安全預設；Google consent screen、真實 scope、外部帳號權限、供應商計費與交付成功都尚未端到端驗證。
+
+## 三層 AI 預算（0.2.0）
+
+所有 AI 分類與翻譯在 UTC 日界線，同時檢查使用者、工作空間與整個部署額度：`OPENAI_DAILY_TOKEN_LIMIT=20000`、`OPENAI_WORKSPACE_DAILY_TOKEN_LIMIT=100000`、`OPENAI_DEPLOYMENT_DAILY_TOKEN_LIMIT=200000`。任一設為 `0` 可停止該範圍的 AI 消耗；非法或負值設定會回傳配置錯誤。
+
+SQLite `BEGIN IMMEDIATE` 將操作認領、三層檢查與預算保留放在同一筆交易，避免同時提交重複扣額或超過上限。儲存失敗全數回復；外部呼叫後結果不明則保留預算，不自動退額或重試。部署總額包含既有 `ai_budget` 保留紀錄；工作空間累計由本版新增表開始記錄。上限涵蓋使用同一資料庫的部署；其他服務若共用 API key，仍須自行設定供應商端總額控制。

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">抽獎NOTE</string>
+    <string name="choose_file">選擇照片或檔案</string>
+    <string name="open_failed">無法開啟這個操作，請使用系統選檔器或瀏覽器。</string>
+    <string name="download_unavailable">此 WebView 無法直接下載此檔。請更新 Android System WebView 或使用網頁版匯出；沒有確認儲存。</string>
+    <string name="load_failed">內建頁面載入失敗，請重新開啟 App；若仍失敗請檢查 APK 的內建前端資產。</string>
+    <string name="exit_title">離開抽獎NOTE？</string>
+    <string name="exit_message">已保存到此裝置的資料會保留；請先確認目前內容已儲存。</string>
+    <string name="stay">繼續使用</string>
+    <string name="leave">離開</string>
+</resources>

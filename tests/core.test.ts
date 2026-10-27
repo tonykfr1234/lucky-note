@@ -4,13 +4,13 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
-import type { Server } from 'node:http';
+import { request, type Server } from 'node:http';
 import { randomInt } from 'node:crypto';
 import { createApp, validateConfiguration } from '../server/core.js';
 
 interface ApiData {
-  user: { id: string; name: string; email: string; avatar: string } | null;
-  csrfToken: string; localAuthEnabled: boolean; googleConfigured: boolean;
+  user: { id: string; name: string; email: string; avatar: string; emailVerified: boolean; identityProvider: string } | null;
+  csrfToken: string; localAuthEnabled: boolean; googleConfigured: boolean; sharingIdentityPolicy: string;
   workspaces: { id: string; name: string; type: string; role: string }[];
   workspace: { id: string; name: string; type: string; role: string };
   note: { id: string; workspaceId: string; title: string; content: string; tags: string[]; version: number; notebookId: string | null };
@@ -56,9 +56,9 @@ async function listenTestServer(server: Server): Promise<void> {
     } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'EADDRINUSE' || attempt === 7) throw error; }
   }
 }
-async function fixture() {
+async function fixture(overrides: NodeJS.ProcessEnv = {}) {
   const directory = mkdtempSync(join(tmpdir(), 'gathernote-test-'));
-  const env = { NODE_ENV: 'test', SESSION_SECRET: 'stable-test-secret-with-at-least-32-characters' };
+  const env: NodeJS.ProcessEnv = { NODE_ENV: 'test', SESSION_SECRET: 'stable-test-secret-with-at-least-32-characters', ...overrides };
   const app = createApp({ dataDir: directory, env, integrationHandler: async () => false });
   await listenTestServer(app.server);
   const origin = `http://127.0.0.1:${(app.server.address() as AddressInfo).port}`;
@@ -267,6 +267,30 @@ test('production configuration fails closed; local-auth requires explicit produc
   assert.doesNotThrow(() => validateConfiguration({ ...secure, AUTH_MODE: 'local', ALLOW_LOCAL_AUTH: 'true' }));
 });
 
+test('CSP explicitly permits only the exact same-origin websocket, including HTTPS production', async () => {
+  const f = await fixture();
+  let secure: ReturnType<typeof createApp> | undefined;
+  const secureDirectory = mkdtempSync(join(tmpdir(), 'gathernote-csp-test-'));
+  try {
+    const response = await f.alice.call('/api/health');
+    assert.ok(response.headers.get('content-security-policy')?.includes(`connect-src 'self' ${f.origin.replace('http:', 'ws:')};`));
+    // Native fetch normalizes Host, so use the HTTP client to exercise an actually spoofed header.
+    const spoofedCsp = await new Promise<string>((resolve, reject) => {
+      const call = request(`${f.origin}/api/health`, { headers: { Host: 'malicious.example' } }, response => {
+        response.resume(); response.on('end', () => resolve(String(response.headers['content-security-policy'] || '')));
+      });
+      call.on('error', reject); call.end();
+    });
+    assert.ok(spoofedCsp.includes("connect-src 'self';"));
+    assert.ok(!spoofedCsp.includes('malicious.example'));
+    secure = createApp({ dataDir: secureDirectory, env: { NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32), APP_ORIGIN: 'https://notes.example.test', AUTH_MODE: 'local', ALLOW_LOCAL_AUTH: 'true' }, integrationHandler: async () => false });
+    await listenTestServer(secure.server);
+    const secureResponse = await fetch(`http://127.0.0.1:${(secure.server.address() as AddressInfo).port}/api/health`);
+    assert.ok(secureResponse.headers.get('content-security-policy')?.includes("connect-src 'self' wss://notes.example.test;"));
+    assert.ok(!secureResponse.headers.get('content-security-policy')?.includes('ws:;'));
+  } finally { await secure?.close(); rmSync(secureDirectory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); await f.cleanup(); }
+});
+
 test('large handwritten content and plain HTML-like text round-trip without server execution', async () => {
   const f = await fixture();
   try {
@@ -275,5 +299,92 @@ test('large handwritten content and plain HTML-like text round-trip without serv
     assert.equal((await f.alice.call(`/api/notes/${note.id}`, 'PATCH', { content, version: 1 })).status, 200);
     assert.equal((await f.alice.call(`/api/notes/${note.id}`)).data.note.content, content);
     assert.equal((await f.alice.call(`/api/notes/${note.id}`, 'PATCH', { content: 'x'.repeat(524289), version: 2 })).status, 400);
+  } finally { await f.cleanup(); }
+});
+
+test('production email squatting cannot enter a group, including memberships imported from local development', async () => {
+  const f = await fixture({ NODE_ENV: 'production', APP_ORIGIN: 'https://notes.example.test', AUTH_MODE: 'local', ALLOW_LOCAL_AUTH: 'true' });
+  try {
+    const owner = await f.alice.register('verified-owner');
+    const claimed = await f.bob.call('/api/auth/register', 'POST', { name: 'Attacker', email: 'victim@example.test', password: 'attacker test password', emailVerified: true, google_sub: 'forged' });
+    assert.equal(claimed.status, 201); assert.equal(claimed.data.user!.emailVerified, false); assert.equal(claimed.data.user!.identityProvider, 'local');
+    const other = await f.carol.register('verified-friend');
+    // Stand in for identities established only by the separately tested verified OIDC callback.
+    f.app.db.prepare('UPDATE users SET google_sub=? WHERE id=?').run('verified-google-owner-sub', owner.id);
+    f.app.db.prepare('UPDATE users SET google_sub=? WHERE id=?').run('verified-google-friend-sub', other.id);
+    const group = await f.alice.group(); const note = await f.alice.note(group);
+    assert.equal((await f.alice.call('/api/session')).data.sharingIdentityPolicy, 'google-verified-only');
+    assert.equal((await f.alice.call('/api/session')).data.user!.emailVerified, true);
+    const invited = await f.alice.call(`/api/workspaces/${group}/members`, 'POST', { email: 'victim@example.test', role: 'editor' });
+    assert.equal(invited.status, 403); assert.equal(invited.data.code, 'VERIFIED_IDENTITY_REQUIRED');
+    assert.equal((await f.bob.call(`/api/notes/${note.id}`)).status, 404);
+    f.app.db.prepare('INSERT INTO members VALUES(?,?,?)').run(group, claimed.data.user!.id, 'editor');
+    for (const path of [`/api/notes/${note.id}`, `/api/notes/${note.id}/collaboration`, `/api/workspaces/${group}/events`, `/api/workspaces/${group}/export`]) assert.equal((await f.bob.call(path)).status, 404);
+    assert.ok(!(await f.bob.call('/api/workspaces')).data.workspaces.some(row => row.id === group));
+    assert.equal((await f.alice.call(`/api/workspaces/${group}/members`, 'POST', { email: 'verified-friend@example.test', role: 'viewer' })).status, 200);
+    assert.equal((await f.carol.call(`/api/notes/${note.id}`)).status, 200);
+    const localGroup = await f.bob.group();
+    assert.equal((await f.bob.call(`/api/workspaces/${localGroup}/members`, 'POST', { email: 'verified-friend@example.test', role: 'viewer' })).status, 403);
+  } finally { await f.cleanup(); }
+});
+
+test('mutation caches contain no note text and deletion tombstones prevent replay resurrection after restart', async () => {
+  const f = await fixture(); let restarted: ReturnType<typeof createApp> | undefined;
+  try {
+    await f.alice.register('cache-owner'); const workspace = await f.alice.privateWorkspace();
+    const payload = { title: 'Private cache title', content: 'UNIQUE_PRIVATE_CONTENT_TO_ERASE', clientMutationId: 'erase-note' };
+    const created = await f.alice.call(`/api/workspaces/${workspace}/notes`, 'POST', payload); const note = created.data.note;
+    assert.equal(created.status, 201);
+    let cache = JSON.stringify(f.app.db.prepare('SELECT * FROM mutations').all());
+    assert.ok(!cache.includes(payload.title)); assert.ok(!cache.includes(payload.content));
+    const archive = (await f.alice.call(`/api/workspaces/${workspace}/export`)).data;
+    const destination = await f.alice.group(); const importBody = { archive, clientMutationId: 'erase-import' };
+    assert.equal((await f.alice.call(`/api/workspaces/${destination}/import`, 'POST', importBody)).status, 201);
+    const imported = (await f.alice.call(`/api/workspaces/${destination}/notes`)).data.notes[0]!;
+    f.app.db.exec('CREATE TABLE integration_previews(id TEXT PRIMARY KEY,provider TEXT,workspace_id TEXT,payload TEXT)');
+    f.app.db.prepare('INSERT INTO integration_previews VALUES(?,?,?,?)').run('linked-ai-preview', 'ai', workspace, JSON.stringify({ items: [{ noteId: note.id, title: payload.title }] }));
+    f.app.db.prepare('INSERT INTO integration_previews VALUES(?,?,?,?)').run('unrelated-external-operation', 'line', workspace, JSON.stringify({ text: 'User supplied independent message', status: 'uncertain' }));
+    assert.equal((await f.alice.call(`/api/notes/${note.id}`, 'DELETE', { version: note.version })).status, 200);
+    assert.equal(f.app.db.prepare('SELECT id FROM integration_previews WHERE id=?').get('linked-ai-preview'), undefined);
+    assert.ok(f.app.db.prepare('SELECT id FROM integration_previews WHERE id=?').get('unrelated-external-operation'));
+    assert.equal((await f.alice.call(`/api/notes/${imported.id}`, 'DELETE', { version: imported.version })).status, 200);
+    cache = JSON.stringify(f.app.db.prepare('SELECT * FROM mutations').all());
+    assert.ok(!cache.includes(payload.content)); assert.ok(!cache.includes(payload.title)); assert.ok(cache.includes('deleted'));
+    assert.equal(f.app.db.prepare('SELECT COUNT(*) AS count FROM notes WHERE content LIKE ?').get(`%${payload.content}%`)!.count, 0);
+    const retried = await f.alice.call(`/api/workspaces/${workspace}/notes`, 'POST', payload); assert.equal(retried.status, 410); assert.equal(retried.data.code, 'RESOURCE_DELETED');
+    assert.equal((await f.alice.call(`/api/workspaces/${destination}/import`, 'POST', importBody)).status, 201);
+    assert.deepEqual((await f.alice.call(`/api/workspaces/${destination}/notes`)).data.notes, []);
+    await f.app.close();
+    restarted = createApp({ dataDir: f.directory, env: f.env, integrationHandler: async () => false }); await listenTestServer(restarted.server);
+    f.alice.origin = `http://127.0.0.1:${(restarted.server.address() as AddressInfo).port}`;
+    assert.equal((await f.alice.call(`/api/workspaces/${workspace}/notes`, 'POST', payload)).status, 410);
+    assert.deepEqual((await f.alice.call(`/api/workspaces/${workspace}/notes`)).data.notes, []);
+  } finally { await restarted?.close(); await f.cleanup(); }
+});
+
+test('legacy full mutation responses are minimized on startup and deleted resources stay gone', async () => {
+  const f = await fixture(); let restarted: ReturnType<typeof createApp> | undefined;
+  try {
+    await f.alice.register('legacy-cache'); const workspace = await f.alice.privateWorkspace(); const note = await f.alice.note(workspace);
+    f.app.db.prepare('UPDATE mutations SET response=?,resource_id=NULL').run(JSON.stringify({ note }));
+    f.app.db.prepare('DELETE FROM notes WHERE id=?').run(note.id); await f.app.close();
+    restarted = createApp({ dataDir: f.directory, env: f.env, integrationHandler: async () => false }); await listenTestServer(restarted.server);
+    f.alice.origin = `http://127.0.0.1:${(restarted.server.address() as AddressInfo).port}`;
+    assert.ok(!JSON.stringify(restarted.db.prepare('SELECT * FROM mutations').all()).includes(note.content));
+    const replay = await f.alice.call(`/api/workspaces/${workspace}/notes`, 'POST', { title: note.title, content: note.content, tags: note.tags, clientMutationId: 'note-1' });
+    assert.equal(replay.status, 410); assert.deepEqual((await f.alice.call(`/api/workspaces/${workspace}/notes`)).data.notes, []);
+  } finally { await restarted?.close(); await f.cleanup(); }
+});
+
+test('auth limiting isolates accounts behind one proxy and ignores forged forwarding headers', async () => {
+  const f = await fixture();
+  try {
+    await f.alice.register('rate-good'); const anonymous = new Client(f.origin);
+    for (let index = 0; index < 30; index++) {
+      const attempt = await anonymous.call('/api/auth/login', 'POST', { email: 'attacked@example.test', password: 'wrong test password' }, { 'X-Forwarded-For': `203.0.113.${index}` });
+      assert.equal(attempt.status, 401);
+    }
+    assert.equal((await anonymous.call('/api/auth/login', 'POST', { email: 'attacked@example.test', password: 'wrong test password' }, { 'X-Forwarded-For': '198.51.100.123' })).status, 429);
+    assert.equal((await anonymous.call('/api/auth/login', 'POST', { email: 'rate-good@example.test', password: 'correct horse battery' })).status, 200);
   } finally { await f.cleanup(); }
 });

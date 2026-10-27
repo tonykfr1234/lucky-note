@@ -24,5 +24,5 @@ visit('node_modules');
 records.sort((a, b) => a.name.localeCompare(b.name));
 mkdirSync('docs', { recursive: true });
 writeFileSync('docs/DEPENDENCIES.json', JSON.stringify(records, null, 2) + '\n');
-writeFileSync('THIRD_PARTY_NOTICES.md', '# Third-party notices\n\nGenerated from installed, lockfile-pinned packages. Includes build/test tools; platform-specific optional packages differ by OS. React and React DOM are the only bundled application dependencies. No code from AFFiNE, AppFlowy, Tiptap, Yjs, or Excalidraw is included.\n' + sections.join(''));
+writeFileSync('THIRD_PARTY_NOTICES.md', '# Third-party notices\n\nGenerated from installed, lockfile-pinned packages. Includes build/test tools; platform-specific optional packages differ by OS. Application dependencies include React, Tiptap, Yjs and Hocuspocus. Their actual package licenses are preserved below. No AFFiNE, AppFlowy or Excalidraw source code is included.\n\nAI-generated background provenance, prompts and derivative hashes are recorded in public/backgrounds/PROVENANCE.md and manifest.json. Do not interpret the software MIT notice as a claim that those images are public domain or exclusively copyrighted.\n' + sections.join(''));
 console.log(`Recorded ${records.length} installed packages and ${sections.length} license/notice files.`);

@@ -1,0 +1,12 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve, join } from 'node:path';
+const folder = process.argv[2];
+if (!['dist-local', 'dist-preview'].includes(folder)) throw new Error('Expected an explicit local build folder.');
+const root = resolve(folder);
+const version = JSON.parse(readFileSync('package.json', 'utf8')).version;
+writeFileSync(join(root, 'build-mode.json'), JSON.stringify({ mode: 'local-only', version, seededDemo: folder === 'dist-preview', backendConnection: false }, null, 2));
+const manifest = JSON.parse(readFileSync(join(root, 'manifest.webmanifest'), 'utf8'));
+manifest.start_url = './'; manifest.scope = './'; manifest.id = './';
+manifest.icons = manifest.icons.map(icon => ({ ...icon, src: './' + icon.src.replace(/^\//, '') }));
+writeFileSync(join(root, 'manifest.webmanifest'), JSON.stringify(manifest, null, 2));
+console.log('Verified local-only marker and relative manifest written to ' + folder);

@@ -1,0 +1,50 @@
+LuckyNote Android wrapper validation / 2026-10-27 / GE76
+
+ACTUAL TOOLCHAIN INVENTORY
+- Java runtime: Oracle Java 8 on PATH.
+- Java compiler: RedHat OpenJDK 1.8.0.504.
+- adb: 1.0.41 / platform-tools 31.0.3-7562133.
+- Gradle cache: 7.1.1 / 7.2 / 7.3.3 / 7.5.1; no Gradle on PATH.
+- No JDK 17, Android SDK platform/build-tools, or Android Studio found at standard configured locations.
+- No new SDK terms accepted and no production signing key created.
+
+PASSED
+- Compiled ExportPolicy.java + ExportPolicyCheck.java with installed javac -encoding UTF-8.
+- Executed check class using installed Java: PASS: 18 export policy checks
+  (exact origin, main frame, MIME whitelist, exact 10 MiB and oversize limit,
+   filename path removal, pending request, duplicate ID and cancellation lifecycle).
+- Python py_compile: verify_apk.py and emulator_smoke.py, exit 0.
+- Node --check android/tools/webview-smoke.mjs, exit 0.
+- Parsed all 7 Android XML documents.
+- Confirmed dist-local/build-mode.json = local-only / version 0.2.0 /
+  seededDemo false / backendConnection false.
+- Independent static review completed. Fixed typed WebMessage handling,
+  document-picker failure cleanup, untrusted content URI filtering, network
+  permission removal, API33 Back callback and explicit API30+ window insets.
+
+NOT RUN ON GE76
+- Gradle Android assemble / Android lint / JUnit test task: missing SDK and JDK17.
+- aapt / apksigner / APK SHA: no locally built APK.
+- Emulator install / native startup / native save-picker cancellation / camera.
+- Physical Galaxy S26 or other Android handset. iPhone cannot install an APK.
+
+CI WORKFLOW READY (not evidence of a run)
+- JDK17/API35 preflight, Gradle8.11.1/AGP8.9.2, local-only frontend guard.
+- assembleDebug + lintDebug + testDebugUnitTest.
+- verify_apk.py validates package, minimum/target API, debug signature,
+  no Internet/broad media permission and output SHA-256.
+- Emulator smoke uses a complete image when available. Optional official API35
+  installation sends stdin EOF only and does not accept new agreements.
+- No usable emulator/image/KVM -> explicit not-run report, not fake success.
+- publishDebug is opt-in with a new explicit debug prerelease tag; no publication
+  was performed by the Android implementation agent.
+
+SAFETY REVIEW EVENT
+- An initial unapplied patch containing an evaluateJavascript Back handler was
+  automatically rejected. It was removed, not bypassed. The accepted version uses
+  native history/Back callbacks and only the restricted LuckyNoteExport channel.
+
+UNRESOLVED RELEASE REQUIREMENTS
+- Parent must publish current source and inspect the actual Android CI run.
+- APK downloadable link, SHA, signature and launch status are pending CI results.
+- Production signing/upgrade continuity and physical-device tests remain separate.

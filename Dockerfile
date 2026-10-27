@@ -11,6 +11,8 @@ WORKDIR /app
 COPY --from=build --chown=node:node /app/build ./build
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --from=build --chown=node:node /app/package.json ./package.json
+COPY --from=build --chown=node:node /app/package-lock.json ./package-lock.json
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 RUN mkdir /data && chown node:node /data
 USER node
 EXPOSE 4317

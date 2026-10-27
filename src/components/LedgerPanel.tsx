@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '../api';
+import { isLocalMode } from '../runtime';
 import type { Ledger, Member } from '../types';
 import { Icon } from './Icon';
 
@@ -66,6 +67,11 @@ export default function LedgerPanel({ workspaceId, userId, role, lang }: Props) 
 
   useEffect(() => {
     setLive(false);
+    if (isLocalMode) {
+      const changed = () => setReload(value => value + 1);
+      window.addEventListener('luckynote:local-change', changed);
+      return () => window.removeEventListener('luckynote:local-change', changed);
+    }
     const stream = new EventSource(`/api/workspaces/${encodeURIComponent(workspaceId)}/events`);
     stream.onopen = () => setLive(true);
     stream.onerror = () => setLive(false);
@@ -123,7 +129,7 @@ export default function LedgerPanel({ workspaceId, userId, role, lang }: Props) 
 
   return <section className="ledger-panel" aria-label={t('分帳帳本', 'Shared expense ledger')}>
     <div className="row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}><div><span className="eyebrow">SPLIT, TOGETHER</span><h1>{t('一起記帳，輕鬆分攤', 'Shared moments. Fair splits.')}</h1><p className="muted">{t('記下共同支出，讓每一分錢都有清楚的去向。', 'Keep shared expenses clear, down to the last cent.')}</p></div>{canEdit && <button className="button primary" onClick={() => { setShowForm(value => !value); setError(''); }} disabled={busy}><Icon name={showForm ? 'close' : 'plus'} />{showForm ? t('取消新增', 'Cancel') : t('新增費用', 'Add expense')}</button>}</div>
-    <p className="muted" style={{ fontSize: 12 }}>{live ? t('即時同步已連線', 'Live sync connected') : t('同步連線中，可手動重新整理', 'Connecting to sync; refresh is available')} · <button className="button" onClick={() => setReload(value => value + 1)} disabled={busy || loading} style={{ padding: '3px 8px', fontSize: 12 }}>{t('重新整理', 'Refresh')}</button></p>
+    <p className="muted" style={{ fontSize: 12 }}>{isLocalMode ? t('此裝置費用紀錄 · 沒有群組或伺服器同步', 'Device expense records · no group or server sync') : live ? t('即時同步已連線', 'Live sync connected') : t('同步連線中，可手動重新整理', 'Connecting to sync; refresh is available')} · <button className="button" onClick={() => setReload(value => value + 1)} disabled={busy || loading} style={{ padding: '3px 8px', fontSize: 12 }}>{t('重新整理', 'Refresh')}</button></p>
     {error && <p className="error" role="alert">{error}</p>}{notice && <p className="status" role="status">{notice}</p>}
     {loading ? <p role="status" className="muted">{t('正在讀取帳本…', 'Loading ledger…')}</p> : <>
       <div className="stat-grid"><div className="stat-card"><span className="muted">{t('共同支出', 'Shared expenses')}</span><strong>{money(total)}</strong><small>{ledger.expenses.length} {t('筆紀錄', 'entries')}</small></div><div className="stat-card"><span className="muted">{personal >= 0 ? t('你待收款', 'You are owed') : t('你待支付', 'You owe')}</span><strong>{money(Math.abs(personal))}</strong><small>{t('已計入收款人確認的結清紀錄', 'Includes recipient-confirmed settlements')}</small></div><div className="stat-card"><span className="muted">{t('餘額核對', 'Balance check')}</span><strong>{net === 0 ? t('總額守恆', 'Balanced') : t('需要核對', 'Review needed')}</strong><small>{t('全部成員餘額合計', 'Sum of member balances')} {money(net)}</small></div></div>

@@ -1,15 +1,19 @@
 import assert from 'node:assert/strict';
-import { generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync, randomInt, sign } from 'node:crypto';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { DatabaseSync } from 'node:sqlite';
 import test, { type TestContext } from 'node:test';
 import { handleIntegrationRoutes } from '../server/integrations.js';
 import { HttpError, type IntegrationContext, type Membership, type User } from '../server/types.js';
+import { createApp } from '../server/core.js';
 
 type Json = Record<string, unknown>;
 const user: User = { id: 'user-a', name: 'Alice', email: 'alice@example.invalid', avatar: '' };
 
-function fixture(t: TestContext, env: NodeJS.ProcessEnv = {}, role: Membership['role'] = 'owner', type: Membership['type'] = 'group') {
+function fixture(t: TestContext, env: NodeJS.ProcessEnv = {}, role: Membership['role'] = 'owner', type: Membership['type'] = 'group', spaces = ['space-a']) {
   const db = new DatabaseSync(':memory:');
   db.exec(`CREATE TABLE notes(id TEXT PRIMARY KEY,workspace_id TEXT,title TEXT,tags TEXT,notebook_id TEXT,created_at TEXT,updated_at TEXT,version INTEGER);
     CREATE TABLE notebooks(id TEXT PRIMARY KEY,workspace_id TEXT,name TEXT);
@@ -17,7 +21,8 @@ function fixture(t: TestContext, env: NodeJS.ProcessEnv = {}, role: Membership['
     INSERT INTO notes VALUES('note-old','space-a','舊筆記','[]',NULL,'2026-10-20T10:00:00.000Z','2026-10-20T10:00:00.000Z',1);
     INSERT INTO notes VALUES('note-b','space-b','別組私人內容','[]',NULL,'2026-10-27T10:00:00.000Z','2026-10-27T10:00:00.000Z',1);
     INSERT INTO notebooks VALUES('book-a','space-a','旅行');
-    INSERT INTO notebooks VALUES('book-b','space-b','私密');`);
+    INSERT INTO notebooks VALUES('book-b','space-b','私密');
+    ALTER TABLE notes ADD COLUMN metadata_version INTEGER NOT NULL DEFAULT 1;`);
   t.after(() => db.close());
   let signedIn = 0;
   async function call(method: string, path: string, body: Json = {}, cookie = '', activeUser: User | null = user) {
@@ -27,7 +32,7 @@ function fixture(t: TestContext, env: NodeJS.ProcessEnv = {}, role: Membership['
       req: { method, headers: { cookie } } as IncomingMessage, res, url: new URL(path, 'http://localhost:4317'), body, db, user: activeUser, env,
       json: (code, payload) => { status = code; response = payload; },
       requireUser: () => { if (!activeUser) throw new HttpError(401, '登入'); return activeUser; },
-      requireWorkspace: (id, write = false) => { if (!activeUser) throw new HttpError(401, '登入'); if (id !== 'space-a' || (write && role === 'viewer')) throw new HttpError(403, '禁止'); return { id, workspaceId: id, userId: user.id, role, type, name: 'A' }; },
+      requireWorkspace: (id, write = false) => { if (!activeUser) throw new HttpError(401, '登入'); if (!spaces.includes(id) || (write && role === 'viewer')) throw new HttpError(403, '禁止'); return { id, workspaceId: id, userId: activeUser.id, role, type, name: 'A' }; },
       createGoogleSession: profile => { assert.equal(profile.emailVerified, true); signedIn += 1; return user; },
       readAttachment: () => { throw new HttpError(404, '附件不存在'); },
       broadcast: () => undefined,
@@ -121,6 +126,7 @@ test('AI missing credentials never calls provider or consumes budget', async t =
   const f = fixture(t); const response = await f.call('POST', '/api/workspaces/space-a/ai/preview', previewBody); const previewId = (response.data.preview as Json).id;
   await expectStatus(f.call('POST', '/api/workspaces/space-a/ai/suggest', { previewId, confirmed: true }), 503, 'NOT_CONFIGURED');
   assert.equal(calls, 0); assert.equal(f.db.prepare('SELECT count(*) as n FROM ai_budget').get()?.n, 0);
+  assert.equal(f.db.prepare('SELECT count(*) as n FROM ai_workspace_budget').get()?.n, 0);
 });
 
 test('AI suggestion requires a second explicit classification; repeated calls do not double charge or apply', async t => {
@@ -134,7 +140,36 @@ test('AI suggestion requires a second explicit classification; repeated calls do
   const assignment = { previewId, confirmed: true, assignments: [{ noteId: 'note-a', notebookId: 'book-a' }] };
   assert.equal((await f.call('POST', '/api/workspaces/space-a/ai/confirm', assignment)).data.applied, 1);
   assert.equal((await f.call('POST', '/api/workspaces/space-a/ai/confirm', assignment)).data.duplicate, true);
-  assert.equal(f.db.prepare("SELECT version FROM notes WHERE id='note-a'").get()?.version, 2); assert.equal(calls, 1);
+  assert.equal(f.db.prepare("SELECT version FROM notes WHERE id='note-a'").get()?.version, 2); assert.equal(f.db.prepare("SELECT metadata_version FROM notes WHERE id='note-a'").get()?.metadata_version, 2); assert.equal(calls, 1);
+});
+
+test('confirmed AI classification increments metadata version and stale REST metadata cannot undo it', async t => {
+  const directory = mkdtempSync(join(tmpdir(), 'luckynote-ai-metadata-'));
+  const app = createApp({ dataDir: directory, env: { NODE_ENV: 'test', SESSION_SECRET: 'test-session-secret-only-at-least-32-characters' } });
+  t.after(async () => { await app.close(); rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); });
+  let port = 0;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    port = randomInt(32000, 48000);
+    try { await new Promise<void>((resolve, reject) => { const ready = () => { app.server.off('error', failed); resolve(); }; const failed = (error: Error) => { app.server.off('listening', ready); reject(error); }; app.server.once('error', failed); app.server.once('listening', ready); app.server.listen(port, '127.0.0.1'); }); break; }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'EADDRINUSE' || attempt === 7) throw error; }
+  }
+  let cookie = ''; let csrf = '';
+  async function api(path: string, method = 'GET', body?: Json) {
+    const response = await fetch(`http://127.0.0.1:${port}${path}`, { method, headers: { Cookie: cookie, 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: method === 'GET' ? undefined : JSON.stringify(body || {}) });
+    const newCookie = response.headers.get('set-cookie'); if (newCookie) cookie = newCookie.split(';')[0];
+    const data = await response.json() as Json; if (typeof data.csrfToken === 'string') csrf = data.csrfToken; return { status: response.status, data };
+  }
+  const registered = await api('/api/auth/register', 'POST', { name: 'AI tester', email: 'ai-metadata@example.invalid', password: 'long-enough-test-password' }); assert.equal(registered.status, 201); const userId = (registered.data.user as Json).id as string;
+  const spaces = await api('/api/workspaces'); const workspaceId = (spaces.data.workspaces as Json[])[0].id as string;
+  const notebook = await api(`/api/workspaces/${workspaceId}/notebooks`, 'POST', { name: 'Confirmed notebook' }); assert.equal(notebook.status, 201); const notebookId = (notebook.data.notebook as Json).id as string;
+  const created = await api(`/api/workspaces/${workspaceId}/notes`, 'POST', { title: 'Selected note', content: 'hello', tags: [], clientMutationId: 'metadata-regression' }); assert.equal(created.status, 201); const noteId = (created.data.note as Json).id as string;
+  assert.equal((await api(`/api/notes/${noteId}/collaboration`)).status, 200);
+  const before = (await api(`/api/notes/${noteId}`)).data.note as Json;
+  await api(`/api/integrations?workspaceId=${workspaceId}`);
+  app.db.prepare("INSERT INTO integration_previews(id,user_id,workspace_id,provider,payload,payload_hash,expires_at,state,result,created_at) VALUES(?,?,?,'ai',?,'test-hash',?,'suggested','{}',?)").run('metadata-preview', userId, workspaceId, JSON.stringify({ items: [{ noteId, version: before.version }] }), Date.now() + 900_000, Date.now());
+  const confirmed = await api(`/api/workspaces/${workspaceId}/ai/confirm`, 'POST', { previewId: 'metadata-preview', confirmed: true, assignments: [{ noteId, notebookId }] }); assert.equal(confirmed.status, 200);
+  const stale = await api(`/api/notes/${noteId}`, 'PATCH', { metadataVersion: before.metadataVersion, title: 'stale', notebookId: null }); assert.equal(stale.status, 409); assert.equal(stale.data.code, 'VERSION_CONFLICT');
+  const current = (await api(`/api/notes/${noteId}`)).data.note as Json; assert.equal(current.notebookId, notebookId); assert.equal(current.metadataVersion, Number(before.metadataVersion) + 1); assert.equal(current.version, Number(before.version) + 1);
 });
 
 test('AI stale preview cannot overwrite a concurrently edited note and daily budget is enforced', async t => {
@@ -153,6 +188,58 @@ test('translation idempotency is user scoped and a second member cannot receive 
   const secondUser = { ...user, id: 'user-b' };
   const second = await f.call('POST', '/api/workspaces/space-a/tools/translate', body, '', secondUser);
   assert.equal(first.data.text, 'translated-1'); assert.equal(second.data.text, 'translated-2'); assert.equal(calls, 2);
+});
+
+const translationBody = { text: 'hello', targetLanguage: 'English', confirmed: true, clientMutationId: 'budget-request-1', tokenBudget: 8000, maxOutputTokens: 128 };
+const translationReservation = Buffer.byteLength(translationBody.text + translationBody.targetLanguage) + 128 + 512;
+
+test('workspace budget combines different users and rolls back a refused reservation', async t => {
+  let calls = 0; t.mock.method(globalThis, 'fetch', async () => { calls++; return Response.json({ output_text: 'translated' }); });
+  const f = fixture(t, { OPENAI_API_KEY: 'test-key', OPENAI_WORKSPACE_DAILY_TOKEN_LIMIT: '1000' });
+  await f.call('POST', '/api/workspaces/space-a/tools/translate', translationBody);
+  await expectStatus(f.call('POST', '/api/workspaces/space-a/tools/translate', translationBody, '', { ...user, id: 'user-b' }), 429, 'WORKSPACE_BUDGET_EXCEEDED');
+  assert.equal(calls, 1); assert.equal(f.db.prepare('SELECT SUM(tokens) AS n FROM ai_budget').get()?.n, translationReservation);
+  assert.equal(f.db.prepare('SELECT SUM(tokens) AS n FROM ai_workspace_budget').get()?.n, translationReservation);
+  assert.equal(f.db.prepare("SELECT count(*) AS n FROM integration_previews WHERE user_id='user-b'").get()?.n, 0);
+});
+
+test('deployment budget combines different users and workspaces and includes legacy reservations', async t => {
+  let calls = 0; t.mock.method(globalThis, 'fetch', async () => { calls++; return Response.json({ output_text: 'translated' }); });
+  const f = fixture(t, { OPENAI_API_KEY: 'test-key', OPENAI_DEPLOYMENT_DAILY_TOKEN_LIMIT: '1000' }, 'owner', 'group', ['space-a', 'space-b']);
+  await f.call('POST', '/api/workspaces/space-a/tools/translate', translationBody);
+  await expectStatus(f.call('POST', '/api/workspaces/space-b/tools/translate', translationBody, '', { ...user, id: 'user-b' }), 429, 'DEPLOYMENT_BUDGET_EXCEEDED');
+  assert.equal(calls, 1); assert.equal(f.db.prepare('SELECT SUM(tokens) AS n FROM ai_budget').get()?.n, translationReservation);
+  assert.equal(f.db.prepare("SELECT count(*) AS n FROM ai_workspace_budget WHERE workspace_id='space-b'").get()?.n, 0);
+});
+
+test('concurrent identical translation reserves once; missing credentials and zero limits reserve nothing', async t => {
+  let calls = 0; t.mock.method(globalThis, 'fetch', async () => { calls++; return Response.json({ output_text: 'translated' }); });
+  const f = fixture(t, { OPENAI_API_KEY: 'test-key' });
+  const results = await Promise.allSettled([f.call('POST', '/api/workspaces/space-a/tools/translate', translationBody), f.call('POST', '/api/workspaces/space-a/tools/translate', translationBody)]);
+  assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
+  const rejected = results.find(result => result.status === 'rejected'); assert.ok(rejected?.status === 'rejected' && rejected.reason instanceof HttpError && rejected.reason.status === 409);
+  assert.equal(calls, 1); assert.equal(f.db.prepare('SELECT SUM(tokens) AS n FROM ai_budget').get()?.n, translationReservation); assert.equal(f.db.prepare('SELECT SUM(tokens) AS n FROM ai_workspace_budget').get()?.n, translationReservation);
+  const missing = fixture(t); await expectStatus(missing.call('POST', '/api/workspaces/space-a/tools/translate', translationBody), 503, 'NOT_CONFIGURED');
+  assert.equal(missing.db.prepare('SELECT count(*) AS n FROM ai_budget').get()?.n, 0);
+  const stopped = fixture(t, { OPENAI_API_KEY: 'test-key', OPENAI_DEPLOYMENT_DAILY_TOKEN_LIMIT: '0' }); await expectStatus(stopped.call('POST', '/api/workspaces/space-a/tools/translate', translationBody), 429, 'DEPLOYMENT_BUDGET_EXCEEDED');
+  assert.equal(stopped.db.prepare('SELECT count(*) AS n FROM ai_budget').get()?.n, 0); assert.equal(stopped.db.prepare('SELECT count(*) AS n FROM integration_previews').get()?.n, 0);
+});
+
+test('reservation and operation claims roll back together on a SQLite write failure', async t => {
+  let calls = 0; t.mock.method(globalThis, 'fetch', async () => { calls++; throw new Error('must not call'); });
+  const f = fixture(t, { OPENAI_API_KEY: 'test-key' }); await f.call('GET', '/api/integrations');
+  f.db.exec("CREATE TRIGGER fail_workspace_budget BEFORE INSERT ON ai_workspace_budget BEGIN SELECT RAISE(ABORT, 'simulated storage failure'); END;");
+  await assert.rejects(f.call('POST', '/api/workspaces/space-a/tools/translate', translationBody), /simulated storage failure/);
+  assert.equal(calls, 0); assert.equal(f.db.prepare('SELECT count(*) AS n FROM ai_budget').get()?.n, 0); assert.equal(f.db.prepare('SELECT count(*) AS n FROM integration_previews').get()?.n, 0);
+});
+
+test('uncertain AI results retain all reservations and cannot retry the same operation', async t => {
+  let calls = 0; t.mock.method(globalThis, 'fetch', async () => { calls++; throw new Error('unknown upstream result'); });
+  const f = fixture(t, { OPENAI_API_KEY: 'test-key' });
+  await expectStatus(f.call('POST', '/api/workspaces/space-a/tools/translate', translationBody), 502);
+  await expectStatus(f.call('POST', '/api/workspaces/space-a/tools/translate', translationBody), 409, 'OPERATION_ALREADY_ATTEMPTED');
+  assert.equal(calls, 1); assert.equal(f.db.prepare('SELECT SUM(tokens) AS n FROM ai_budget').get()?.n, translationReservation); assert.equal(f.db.prepare('SELECT SUM(tokens) AS n FROM ai_workspace_budget').get()?.n, translationReservation);
+  assert.equal(f.db.prepare('SELECT state FROM integration_previews').get()?.state, 'uncertain');
 });
 
 test('Google OAuth is explicitly unavailable without configuration', async t => {

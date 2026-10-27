@@ -22,3 +22,13 @@ artifacts/private/
 backups/
 restored-data/
 
+
+dist-local/
+dist-preview/
+android/app/build/
+android/.gradle/
+android/local.properties
+*.keystore
+*.jks
+artifacts/android/
+*.apk

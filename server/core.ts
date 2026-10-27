@@ -5,10 +5,11 @@ import { mkdirSync, readFileSync, writeFileSync, unlinkSync, existsSync, statSyn
 import { resolve, join, extname, sep } from 'node:path';
 import { HttpError, type IntegrationContext, type User, type Membership } from './types.js';
 import { handleIntegrationRoutes } from './integrations.js';
+import { attachCollaboration } from './collaboration.js';
 
 interface SessionRow { user_id: string; csrf: string; expires_at: number }
 interface UserRow { id: string; name: string; email: string; avatar: string; password_hash: string | null; google_sub: string | null }
-interface NoteRow { id: string; workspace_id: string; title: string; content: string; tags: string; notebook_id: string | null; template: string; version: number; created_at: string; updated_at: string }
+interface NoteRow { id: string; workspace_id: string; title: string; content: string; tags: string; notebook_id: string | null; template: string; version: number; metadata_version: number; content_revision: number; content_mode: 'plain' | 'yjs-v1'; created_at: string; updated_at: string }
 interface FileRow { id: string; note_id: string; name: string; mime: string; size: number; workspace_id: string }
 interface ExpenseRow { id: string; workspace_id: string; description: string; amount: number; payer_id: string; participant_ids: string; created_at: string }
 export interface AppOptions {
@@ -31,9 +32,9 @@ function email(value: unknown): string {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(result)) throw new HttpError(400, 'Email 格式不正確', 'VALIDATION');
   return result;
 }
-function safeUser(row: UserRow): User { return { id: row.id, name: row.name, email: row.email, avatar: row.avatar }; }
+function safeUser(row: UserRow): User { return { id: row.id, name: row.name, email: row.email, avatar: row.avatar, emailVerified: Boolean(row.google_sub), identityProvider: row.google_sub ? 'google' : 'local' }; }
 function noteJson(row: NoteRow) {
-  return { id: row.id, workspaceId: row.workspace_id, title: row.title, content: row.content, tags: JSON.parse(row.tags) as string[], notebookId: row.notebook_id, template: row.template, version: row.version, createdAt: row.created_at, updatedAt: row.updated_at };
+  return { id: row.id, workspaceId: row.workspace_id, title: row.title, content: row.content, tags: JSON.parse(row.tags) as string[], notebookId: row.notebook_id, template: row.template, version: row.version, metadataVersion: row.metadata_version, contentRevision: row.content_revision, contentMode: row.content_mode, createdAt: row.created_at, updatedAt: row.updated_at };
 }
 function fileJson(row: FileRow) { return { id: row.id, name: row.name, mime: row.mime, size: row.size, url: `/api/files/${row.id}` }; }
 function passwordHash(password: string): string {
@@ -50,6 +51,16 @@ function passwordMatches(password: string, stored: string | null): boolean {
 }
 function parseCookie(req: IncomingMessage): string | null {
   return (req.headers.cookie || '').split(';').map((x) => x.trim()).find((x) => x.startsWith('gn_session='))?.slice(11) || null;
+}
+function websocketCspSource(req: IncomingMessage, env: NodeJS.ProcessEnv): string | null {
+  const host = req.headers.host || '';
+  const candidate = env.APP_ORIGIN || (/^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d{1,5})?$/.test(host) ? `http://${host}` : '');
+  try {
+    const parsed = new URL(candidate);
+    // URL normalization and exact-origin comparison prevent CSP token/header injection.
+    if (parsed.origin !== candidate || !['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) return null;
+    return `${parsed.protocol === 'https:' ? 'wss:' : 'ws:'}//${parsed.host}`;
+  } catch { return null; }
 }
 async function readBody(req: IncomingMessage): Promise<Record<string, unknown>> {
   if (req.method === 'GET' || req.method === 'HEAD') return {};
@@ -99,7 +110,7 @@ export function createApp(options: AppOptions = {}) {
   const uploadDir = join(dataDir, 'uploads');
   mkdirSync(uploadDir, { recursive: true, mode: 0o700 });
   const db = new DatabaseSync(join(dataDir, 'gathernote.sqlite'));
-  db.exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
+  db.exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;
     CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,name TEXT NOT NULL,email TEXT UNIQUE NOT NULL,password_hash TEXT,google_sub TEXT UNIQUE,avatar TEXT NOT NULL DEFAULT '');
     CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,csrf TEXT NOT NULL,expires_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS workspaces(id TEXT PRIMARY KEY,name TEXT NOT NULL,type TEXT NOT NULL CHECK(type IN ('private','group')),created_at TEXT NOT NULL);
@@ -111,8 +122,16 @@ export function createApp(options: AppOptions = {}) {
     CREATE TABLE IF NOT EXISTS expenses(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,description TEXT NOT NULL,amount INTEGER NOT NULL,payer_id TEXT NOT NULL REFERENCES users(id),participant_ids TEXT NOT NULL,created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS mutations(user_id TEXT NOT NULL,scope TEXT NOT NULL,key TEXT NOT NULL,request_hash TEXT NOT NULL,response TEXT NOT NULL,PRIMARY KEY(user_id,scope,key));
     CREATE TABLE IF NOT EXISTS settlement_confirmations(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL REFERENCES workspaces(id),from_id TEXT NOT NULL REFERENCES users(id),to_id TEXT NOT NULL REFERENCES users(id),amount INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL,confirmed_at TEXT);
-    PRAGMA user_version=1;`);
+    `);
   const secret = env.SESSION_SECRET || randomBytes(32).toString('hex');
+  const mutationColumns = new Set((db.prepare('PRAGMA table_info(mutations)').all() as { name: string }[]).map(row => row.name));
+  if (!mutationColumns.has('resource_id')) db.exec('ALTER TABLE mutations ADD COLUMN resource_id TEXT');
+  db.exec('CREATE INDEX IF NOT EXISTS mutations_resource ON mutations(resource_id)');
+  // Legacy full-response caches become references; deleted resources retain only an opaque tombstone.
+  for (const row of db.prepare('SELECT user_id,scope,key,response FROM mutations WHERE resource_id IS NULL').all() as { user_id: string; scope: string; key: string; response: string }[]) {
+    const compact = compactMutation(JSON.parse(row.response) as unknown);
+    if (compact.resourceId) db.prepare('UPDATE mutations SET response=?,resource_id=? WHERE user_id=? AND scope=? AND key=?').run(JSON.stringify(compact.response), compact.resourceId, row.user_id, row.scope, row.key);
+  }
   const tokenDigest = (value: string) => createHmac('sha256', secret).update(value).digest('hex');
   const localAuthEnabled = env.AUTH_MODE !== 'google' && (env.NODE_ENV !== 'production' || env.ALLOW_LOCAL_AUTH === 'true');
   const googleConfigured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.APP_ORIGIN);
@@ -120,7 +139,11 @@ export function createApp(options: AppOptions = {}) {
   const rates = new Map<string, { count: number; expires: number }>();
   const transaction = <T>(fn: () => T): T => { db.exec('BEGIN IMMEDIATE'); try { const result = fn(); db.exec('COMMIT'); return result; } catch (error) { db.exec('ROLLBACK'); throw error; } };
   const getUser = (id: string) => db.prepare('SELECT * FROM users WHERE id=?').get(id) as unknown as UserRow | undefined;
-  const lookupMembership = (workspaceId: string, userId: string) => db.prepare('SELECT w.id,w.id as workspaceId,w.name,w.type,m.user_id as userId,m.role FROM workspaces w JOIN members m ON m.workspace_id=w.id WHERE w.id=? AND m.user_id=?').get(workspaceId, userId) as unknown as Membership | undefined;
+  const lookupMembership = (workspaceId: string, userId: string): Membership | undefined => {
+    const member = db.prepare('SELECT w.id,w.id as workspaceId,w.name,w.type,m.user_id as userId,m.role FROM workspaces w JOIN members m ON m.workspace_id=w.id WHERE w.id=? AND m.user_id=?').get(workspaceId, userId) as unknown as Membership | undefined;
+    if (env.NODE_ENV === 'production' && member?.type === 'group' && member.role !== 'owner' && !getUser(userId)?.google_sub) return undefined;
+    return member;
+  };
   function closeStream(stream: { res: ServerResponse; timer: NodeJS.Timeout }) { clearInterval(stream.timer); stream.res.end(); streams.delete(stream as never); }
   function streamAuthorized(stream: { sessionId: string; userId: string; workspaceId: string }) {
     return Boolean(db.prepare('SELECT id FROM sessions WHERE id=? AND expires_at>?').get(stream.sessionId, Date.now()) && lookupMembership(stream.workspaceId, stream.userId));
@@ -141,7 +164,8 @@ export function createApp(options: AppOptions = {}) {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+    const websocketSource = websocketCspSource(req, env);
+    res.setHeader('Content-Security-Policy', `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'${websocketSource ? ` ${websocketSource}` : ''}; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`);
     if (env.NODE_ENV === 'production') res.setHeader('Strict-Transport-Security', 'max-age=31536000');
     const json = (status: number, data: unknown) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(data)); };
     try {
@@ -185,7 +209,7 @@ export function createApp(options: AppOptions = {}) {
       }
       const body = await readBody(req);
       const createSession = (userId: string) => {
-        if (sessionId) db.prepare('DELETE FROM sessions WHERE id=?').run(sessionId);
+        if (sessionId) { db.prepare('DELETE FROM sessions WHERE id=?').run(sessionId); collaboration.revokeSession(sessionId); }
         const token = randomBytes(32).toString('base64url'); const csrf = randomBytes(32).toString('base64url');
         db.prepare('DELETE FROM sessions WHERE expires_at<=?').run(Date.now());
         db.prepare('INSERT INTO sessions VALUES(?,?,?,?)').run(tokenDigest(token), userId, csrf, Date.now() + SESSION_MS);
@@ -219,15 +243,19 @@ export function createApp(options: AppOptions = {}) {
       };
       const ctx: IntegrationContext = { req, res, url, body, db, user, env, json, requireUser, requireWorkspace, createGoogleSession, broadcast, readAttachment };
       if (await (options.integrationHandler || handleIntegrationRoutes)(ctx)) return;
-      if (req.method === 'GET' && pathname === '/api/health') { json(200, { status: 'ok', version: '0.1.0', storage: 'sqlite' }); return; }
-      if (req.method === 'GET' && pathname === '/api/session') { json(200, { user, csrfToken: session?.csrf || '', googleConfigured, localAuthEnabled }); return; }
+      if (req.method === 'GET' && pathname === '/api/health') { json(200, { status: 'ok', version: '0.2.0', storage: 'sqlite', collaboration: 'yjs-hocuspocus' }); return; }
+      if (req.method === 'GET' && pathname === '/api/session') { json(200, { user, csrfToken: session?.csrf || '', googleConfigured, localAuthEnabled, sharingIdentityPolicy: env.NODE_ENV === 'production' ? 'google-verified-only' : 'local-development-test-identities' }); return; }
       if (req.method === 'POST' && ['/api/auth/register', '/api/auth/login'].includes(pathname)) {
         if (!localAuthEnabled) throw new HttpError(403, '此部署未啟用本機密碼登入', 'LOCAL_AUTH_DISABLED');
-        const rateKey = `${req.socket.remoteAddress || 'unknown'}:auth`;
+        const address = email(body.email);
+        // Ignore arbitrary forwarding headers. One account must not lock out a whole NAT or proxy.
+        const rateKey = `${req.socket.remoteAddress || 'unknown'}:${address}`;
         const now = Date.now(); const rate = rates.get(rateKey);
         if (rate && rate.expires > now && rate.count >= 30) throw new HttpError(429, '登入嘗試過多，請稍後再試', 'RATE_LIMIT');
         rates.set(rateKey, { count: rate && rate.expires > now ? rate.count + 1 : 1, expires: rate && rate.expires > now ? rate.expires : now + 60000 });
-        const address = email(body.email); const password = string(body.password, '密碼', 200);
+        if (rates.size > 10000) for (const [key, value] of rates) if (value.expires <= now) rates.delete(key);
+        while (rates.size > 10000) rates.delete(rates.keys().next().value!);
+        const password = string(body.password, '密碼', 200);
         if (password.length < 10) throw new HttpError(400, '密碼至少需要 10 個字元', 'VALIDATION');
         let row = db.prepare('SELECT * FROM users WHERE email=?').get(address) as unknown as UserRow | undefined;
         if (pathname.endsWith('register')) {
@@ -241,6 +269,7 @@ export function createApp(options: AppOptions = {}) {
       }
       if (req.method === 'POST' && pathname === '/api/auth/logout') {
         requireUser(); db.prepare('DELETE FROM sessions WHERE id=?').run(sessionId);
+        collaboration.revokeSession(sessionId);
         for (const stream of streams) if (stream.sessionId === sessionId) closeStream(stream);
         res.setHeader('Set-Cookie', `gn_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${env.NODE_ENV === 'production' ? '; Secure' : ''}`);
         json(200, { ok: true }); return;
@@ -258,7 +287,7 @@ export function createApp(options: AppOptions = {}) {
       }
       if (pathname === '/api/workspaces') {
         const current = requireUser();
-        if (req.method === 'GET') { json(200, { workspaces: db.prepare('SELECT w.id,w.name,w.type,m.role FROM workspaces w JOIN members m ON m.workspace_id=w.id WHERE m.user_id=? ORDER BY w.created_at,w.id').all(current.id) }); return; }
+        if (req.method === 'GET') { json(200, { workspaces: (db.prepare('SELECT w.id,w.name,w.type,m.role FROM workspaces w JOIN members m ON m.workspace_id=w.id WHERE m.user_id=? ORDER BY w.created_at,w.id').all(current.id) as { id: string }[]).filter(row => lookupMembership(row.id, current.id)) }); return; }
         if (req.method === 'POST') {
           const name = string(body.name, '工作空間名稱', 100).trim();
           if (!['private', 'group'].includes(String(body.type))) throw new HttpError(400, '工作空間類型不正確');
@@ -302,19 +331,22 @@ export function createApp(options: AppOptions = {}) {
           broadcast(workspaceId, { kind: 'notes' }); json(201, response); return;
         }
         if (resource === 'members') {
-          if (req.method === 'GET') { json(200, { members: db.prepare('SELECT u.id,u.name,u.email,m.role FROM members m JOIN users u ON u.id=m.user_id WHERE m.workspace_id=? ORDER BY m.role,u.name,u.id').all(workspaceId) }); return; }
+          if (req.method === 'GET') { json(200, { members: (db.prepare('SELECT u.id,u.name,u.email,u.google_sub,m.role FROM members m JOIN users u ON u.id=m.user_id WHERE m.workspace_id=? ORDER BY m.role,u.name,u.id').all(workspaceId) as { id: string; name: string; email: string; google_sub: string | null; role: string }[]).map(({ google_sub, ...member }) => ({ ...member, emailVerified: Boolean(google_sub), identityProvider: google_sub ? 'google' : 'local' })) }); return; }
           if (membership.role !== 'owner' || membership.type !== 'group') throw new HttpError(403, '只有群組擁有者可以管理成員', 'FORBIDDEN');
           if (req.method === 'POST') {
-            const target = db.prepare('SELECT id FROM users WHERE email=?').get(email(body.email)) as { id: string } | undefined;
+            const target = db.prepare('SELECT id,google_sub FROM users WHERE email=?').get(email(body.email)) as { id: string; google_sub: string | null } | undefined;
             if (!target) throw new HttpError(404, '此帳號尚未註冊；本版不會寄送邀請信', 'NOT_REGISTERED');
+            if (env.NODE_ENV === 'production' && (!current.emailVerified || !target.google_sub)) throw new HttpError(403, '正式群組分享需要雙方完成 Google 身分驗證；本機註冊不代表持有該 Email', 'VERIFIED_IDENTITY_REQUIRED');
             if (!['editor', 'viewer'].includes(String(body.role))) throw new HttpError(400, '角色必須為 editor 或 viewer');
             if (target.id === current.id) throw new HttpError(400, '不可變更自己的擁有者權限');
             db.prepare('INSERT INTO members VALUES(?,?,?) ON CONFLICT(workspace_id,user_id) DO UPDATE SET role=excluded.role').run(workspaceId, target.id, String(body.role));
+            collaboration.revalidateWorkspace(workspaceId);
             broadcast(workspaceId, { kind: 'members' }); json(200, { ok: true }); return;
           }
           if (req.method === 'DELETE' && resourceId) {
             if (resourceId === current.id) throw new HttpError(400, '不可移除擁有者');
             db.prepare('DELETE FROM members WHERE workspace_id=? AND user_id=? AND role<>?').run(workspaceId, resourceId, 'owner');
+            collaboration.revalidateWorkspace(workspaceId);
             broadcast(workspaceId, { kind: 'members' }); json(200, { ok: true }); return;
           }
         }
@@ -387,12 +419,16 @@ export function createApp(options: AppOptions = {}) {
           }
         }
       }
-      const noteRoute = /^\/api\/notes\/([^/]+)(?:\/(attachments))?$/.exec(pathname);
+      const noteRoute = /^\/api\/notes\/([^/]+)(?:\/(attachments|collaboration))?$/.exec(pathname);
       if (noteRoute) {
         const note = db.prepare('SELECT * FROM notes WHERE id=?').get(noteRoute[1]!) as unknown as NoteRow | undefined;
         if (!note) { requireUser(); throw new HttpError(404, '找不到筆記', 'NOT_FOUND'); }
         requireWorkspace(note.workspace_id, req.method !== 'GET');
         const current = requireUser();
+        if (noteRoute[2] === 'collaboration') {
+          if (req.method === 'GET') { json(200, collaboration.describe(note.id, current.id)); return; }
+          throw new HttpError(405, '此協作描述介面僅支援 GET');
+        }
         if (noteRoute[2] === 'attachments') {
           if (req.method === 'GET') { json(200, { attachments: (db.prepare('SELECT * FROM attachments WHERE note_id=? ORDER BY rowid').all(note.id) as unknown as FileRow[]).map(fileJson) }); return; }
           if (req.method === 'POST') {
@@ -414,16 +450,28 @@ export function createApp(options: AppOptions = {}) {
         } else {
           if (req.method === 'GET') { json(200, { note: noteJson(note) }); return; }
           if (req.method === 'PATCH') {
-            if (body.version !== note.version) throw new HttpError(409, '筆記已被其他成員修改，請保留草稿並載入最新版本', 'VERSION_CONFLICT');
+            const collaborative = note.content_mode === 'yjs-v1';
+            if (collaborative && body.content !== undefined) throw new HttpError(409, '此筆記正文已啟用即時協作，請透過協作編輯器更新', 'CRDT_CONTENT_OWNED');
+            const metadataCheck = collaborative && body.metadataVersion !== undefined;
+            if (metadataCheck ? body.metadataVersion !== note.metadata_version : body.version !== note.version) throw new HttpError(409, '筆記已被其他成員修改，請保留草稿並載入最新版本', 'VERSION_CONFLICT');
             const value = validateNote({ title: note.title, content: note.content, tags: JSON.parse(note.tags), notebookId: note.notebook_id, template: note.template, ...body }, note.workspace_id);
-            const result = db.prepare('UPDATE notes SET title=?,content=?,tags=?,notebook_id=?,template=?,version=version+1,updated_at=? WHERE id=? AND version=?').run(value.title, value.content, JSON.stringify(value.tags), value.notebookId, value.template, new Date().toISOString(), note.id, note.version);
+            const result = collaborative
+              ? db.prepare('UPDATE notes SET title=?,tags=?,notebook_id=?,template=?,metadata_version=metadata_version+1,version=version+1,updated_at=? WHERE id=? AND metadata_version=?').run(value.title, JSON.stringify(value.tags), value.notebookId, value.template, new Date().toISOString(), note.id, note.metadata_version)
+              : db.prepare('UPDATE notes SET title=?,content=?,tags=?,notebook_id=?,template=?,metadata_version=metadata_version+1,version=version+1,updated_at=? WHERE id=? AND version=?').run(value.title, value.content, JSON.stringify(value.tags), value.notebookId, value.template, new Date().toISOString(), note.id, note.version);
             if (Number(result.changes) !== 1) throw new HttpError(409, '筆記版本衝突', 'VERSION_CONFLICT');
             broadcast(note.workspace_id, { kind: 'notes', noteId: note.id }); json(200, { note: noteJson(db.prepare('SELECT * FROM notes WHERE id=?').get(note.id) as unknown as NoteRow) }); return;
           }
           if (req.method === 'DELETE') {
             if (body.version !== note.version) throw new HttpError(409, '筆記已更新，請重新整理後再刪除', 'VERSION_CONFLICT');
             const files = db.prepare('SELECT id FROM attachments WHERE note_id=?').all(note.id) as { id: string }[];
-            db.prepare('DELETE FROM notes WHERE id=? AND version=?').run(note.id, note.version);
+            transaction(() => {
+              for (const resourceId of [note.id, ...files.map(file => file.id)]) forgetMutationResource(resourceId);
+              if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='integration_previews'").get()) {
+                db.prepare("DELETE FROM integration_previews WHERE provider='ai' AND workspace_id=? AND EXISTS(SELECT 1 FROM json_each(integration_previews.payload,'$.items') item WHERE json_extract(item.value,'$.noteId')=?)").run(note.workspace_id, note.id);
+              }
+              db.prepare('DELETE FROM notes WHERE id=? AND version=?').run(note.id, note.version);
+            });
+            collaboration.deleteNote(note.id);
             for (const file of files) if (existsSync(join(uploadDir, file.id))) unlinkSync(join(uploadDir, file.id));
             broadcast(note.workspace_id, { kind: 'notes', noteId: note.id }); json(200, { ok: true }); return;
           }
@@ -451,7 +499,7 @@ export function createApp(options: AppOptions = {}) {
           res.writeHead(200, { ...headers, 'Content-Length': bytes.length }); res.end(req.method === 'HEAD' ? undefined : bytes); return;
         }
         if (fileRoute[1] === 'attachments' && req.method === 'DELETE') {
-          db.prepare('DELETE FROM attachments WHERE id=?').run(file.id); if (existsSync(path)) unlinkSync(path);
+          transaction(() => { forgetMutationResource(file.id); db.prepare('DELETE FROM attachments WHERE id=?').run(file.id); }); if (existsSync(path)) unlinkSync(path);
           broadcast(file.workspace_id, { kind: 'attachments', noteId: file.note_id }); json(200, { ok: true }); return;
         }
       }
@@ -459,7 +507,7 @@ export function createApp(options: AppOptions = {}) {
       if (expenseRoute && req.method === 'DELETE') {
         requireUser(); const expense = db.prepare('SELECT workspace_id FROM expenses WHERE id=?').get(expenseRoute[1]!) as { workspace_id: string } | undefined;
         if (!expense) throw new HttpError(404, '找不到費用');
-        requireWorkspace(expense.workspace_id, true); db.prepare('DELETE FROM expenses WHERE id=?').run(expenseRoute[1]!);
+        requireWorkspace(expense.workspace_id, true); transaction(() => { forgetMutationResource(expenseRoute[1]!); db.prepare('DELETE FROM expenses WHERE id=?').run(expenseRoute[1]!); });
         broadcast(expense.workspace_id, { kind: 'expenses' }); json(200, { ok: true }); return;
       }
       throw new HttpError(404, '找不到 API', 'NOT_FOUND');
@@ -468,6 +516,16 @@ export function createApp(options: AppOptions = {}) {
       if (error instanceof HttpError) json(error.status, { error: error.message, code: error.code });
       else { console.error('Request failed:', error instanceof Error ? error.message : 'unknown'); json(500, { error: '伺服器處理失敗，請稍後重試', code: 'INTERNAL' }); }
     }
+  });
+  const collaboration = attachCollaboration({
+    server, db, env, broadcast,
+    authenticateCookie: (cookie) => {
+      const token = (cookie || '').split(';').map(item => item.trim()).find(item => item.startsWith('gn_session='))?.slice(11);
+      if (!token || token.length > 128) return null;
+      const sessionId = tokenDigest(token);
+      const session = db.prepare('SELECT user_id,csrf,expires_at FROM sessions WHERE id=? AND expires_at>?').get(sessionId, Date.now()) as unknown as SessionRow | undefined;
+      return session ? { sessionId, userId: session.user_id, csrf: session.csrf, expiresAt: session.expires_at } : null;
+    },
   });
   server.requestTimeout = 30000; server.headersTimeout = 15000;
   function validateNote(body: Record<string, unknown>, workspaceId: string) {
@@ -484,9 +542,31 @@ export function createApp(options: AppOptions = {}) {
     const hash = createHash('sha256').update(JSON.stringify(body)).digest('hex');
     return transaction(() => {
       const existing = db.prepare('SELECT request_hash,response FROM mutations WHERE user_id=? AND scope=? AND key=?').get(userId, scope, key) as { request_hash: string; response: string } | undefined;
-      if (existing) { if (existing.request_hash !== hash) throw new HttpError(409, '重複操作識別碼已用於不同內容', 'IDEMPOTENCY_CONFLICT'); return JSON.parse(existing.response) as unknown; }
-      const response = fn(); db.prepare('INSERT INTO mutations VALUES(?,?,?,?,?)').run(userId, scope, key, hash, JSON.stringify(response)); return response;
+      if (existing) { if (existing.request_hash !== hash) throw new HttpError(409, '重複操作識別碼已用於不同內容', 'IDEMPOTENCY_CONFLICT'); return hydrateMutation(JSON.parse(existing.response) as unknown); }
+      const response = fn(); const compact = compactMutation(response);
+      db.prepare('INSERT INTO mutations(user_id,scope,key,request_hash,response,resource_id) VALUES(?,?,?,?,?,?)').run(userId, scope, key, hash, JSON.stringify(compact.response), compact.resourceId); return response;
     });
+  }
+  function compactMutation(response: unknown): { response: unknown; resourceId: string | null } {
+    if (response && typeof response === 'object') for (const kind of ['note', 'attachment', 'expense'] as const) {
+      const item = (response as Record<string, unknown>)[kind];
+      if (item && typeof item === 'object' && typeof (item as { id?: unknown }).id === 'string') {
+        const id = (item as { id: string }).id;
+        return { response: { resource: kind, id }, resourceId: id };
+      }
+    }
+    return { response, resourceId: null };
+  }
+  function forgetMutationResource(resourceId: string) { db.prepare('UPDATE mutations SET response=? WHERE resource_id=?').run('{"deleted":true}', resourceId); }
+  function hydrateMutation(value: unknown): unknown {
+    if (!value || typeof value !== 'object') return value;
+    const item = value as { resource?: string; id?: string; deleted?: boolean };
+    const gone = () => { throw new HttpError(410, '原操作建立的資料已刪除；不會重建', 'RESOURCE_DELETED'); };
+    if (item.deleted) return gone();
+    if (item.resource === 'note') { const row = db.prepare('SELECT * FROM notes WHERE id=?').get(item.id!) as unknown as NoteRow | undefined; return row ? { note: noteJson(row) } : gone(); }
+    if (item.resource === 'attachment') { const row = db.prepare('SELECT * FROM attachments WHERE id=?').get(item.id!) as unknown as FileRow | undefined; return row ? { attachment: fileJson(row) } : gone(); }
+    if (item.resource === 'expense') { const row = db.prepare('SELECT * FROM expenses WHERE id=?').get(item.id!) as unknown as ExpenseRow | undefined; return row ? { expense: { id: row.id, description: row.description, amount: row.amount, payerId: row.payer_id, participantIds: JSON.parse(row.participant_ids) as string[], createdAt: row.created_at } } : gone(); }
+    return value;
   }
   function expenseSummary(workspaceId: string) {
     const rows = db.prepare('SELECT * FROM expenses WHERE workspace_id=? ORDER BY created_at DESC,id').all(workspaceId) as unknown as ExpenseRow[];
@@ -512,5 +592,7 @@ export function createApp(options: AppOptions = {}) {
     }
     return { expenses: rows.map((row) => ({ id: row.id, description: row.description, amount: row.amount, payerId: row.payer_id, participantIds: JSON.parse(row.participant_ids) as string[], createdAt: row.created_at })), balances, settlements, currency: 'TWD' };
   }
-  return { server, db, dataDir, close: async () => { for (const stream of streams) closeStream(stream); await new Promise<void>((done) => { if (server.listening) { server.close(() => done()); server.closeIdleConnections(); } else done(); }); db.close(); } };
+  let closePromise: Promise<void> | undefined;
+  const shutdown = async () => { for (const stream of streams) closeStream(stream); await collaboration.close(); await new Promise<void>((done) => { if (server.listening) { server.close(() => done()); server.closeIdleConnections(); } else done(); }); db.close(); };
+  return { server, db, dataDir, close: () => { closePromise ??= shutdown(); return closePromise; } };
 }

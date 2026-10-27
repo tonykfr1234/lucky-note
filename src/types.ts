@@ -1,9 +1,9 @@
 export type Lang = 'zh-TW' | 'en';
-export type User = { id: string; name: string; email: string; avatar?: string };
+export type User = { id: string; name: string; email: string; avatar?: string; emailVerified?: boolean; identityProvider?: 'google' | 'local' };
 export type Workspace = { id: string; name: string; type: 'private' | 'group'; role: 'owner' | 'editor' | 'viewer' };
 export type Member = User & { role: string };
 export type Notebook = { id: string; name: string };
-export type Note = { id: string; workspaceId: string; title: string; content: string; tags: string[]; notebookId: string | null; template: string; version: number; updatedAt: string; createdAt: string };
+export type Note = { id: string; workspaceId: string; title: string; content: string; tags: string[]; notebookId: string | null; template: string; version: number; metadataVersion: number; contentRevision: number; contentMode: 'plain' | 'yjs-v1'; updatedAt: string; createdAt: string };
 export type Attachment = { id: string; name: string; mime: string; size: number; url: string };
 export type Expense = { id: string; description: string; amount: number; payerId: string; participantIds: string[]; createdAt: string };
 export type Ledger = { expenses: Expense[]; balances: { userId: string; name: string; balance: number }[]; settlements: { from: string; to: string; amount: number }[]; currency: string };

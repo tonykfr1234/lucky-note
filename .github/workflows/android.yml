@@ -1,0 +1,106 @@
+name: Android debug APK
+on:
+  workflow_dispatch:
+    inputs:
+      tryPrelicensedImage:
+        description: 'Try official API35 emulator image using only existing runner SDK licenses'
+        type: boolean
+        default: true
+      publishDebug:
+        description: 'Publish this verified development APK as an explicitly tagged prerelease'
+        type: boolean
+        default: false
+      tag:
+        description: 'New tag for optional publishing, e.g. v0.2.0-android-debug1'
+        type: string
+        default: ''
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+      - 'src/**'
+      - 'shared/**'
+      - 'public/**'
+      - 'package*.json'
+      - 'vite.config.ts'
+      - 'index.html'
+      - 'scripts/write-local-marker.mjs'
+permissions:
+  contents: read
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Require preinstalled JDK 17 and Android SDK 35
+        shell: bash
+        run: |
+          test -x "$JAVA_HOME_17_X64/bin/java"
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_17_X64/bin" >> "$GITHUB_PATH"
+          test -f "$ANDROID_HOME/platforms/android-35/android.jar"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/aapt"
+          # This preflight does not install SDK packages or accept SDK licenses.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - run: npm ci --ignore-scripts
+      - run: npm run build:local
+      - name: Build, lint, and run native export policy regressions
+        run: gradle -p android --no-daemon :app:assembleDebug :app:lintDebug :app:testDebugUnitTest
+      - name: Verify package, debug signature, permissions, and SHA-256
+        run: python3 android/tools/verify_apk.py
+      - name: Emulator smoke test without accepting new SDK terms
+        env:
+          LUCKYNOTE_TRY_PRELICENSED_IMAGE: ${{ github.event_name == 'push' || inputs.tryPrelicensedImage }}
+        run: python3 android/tools/emulator_smoke.py
+      - name: Save APK and actual verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LuckyNote-android-debug
+          path: |
+            artifacts/android/
+            android/app/build/reports/lint-results-debug.*
+            android/app/build/reports/tests/testDebugUnitTest/
+            android/app/build/test-results/testDebugUnitTest/
+          if-no-files-found: warn
+          retention-days: 14
+  publish-debug:
+    if: github.event_name == 'workflow_dispatch' && inputs.publishDebug && inputs.tag != ''
+    needs: apk
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: LuckyNote-android-debug
+          path: android-release
+      - name: Publish a new debug prerelease without persistent credentials
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-android-debug[0-9]*$ ]]
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'This release already exists; refusing to replace its files.' >&2
+            exit 1
+          fi
+          artifact_dir=android-release/artifacts/android
+          test -f "$artifact_dir/apk-verification.json"
+          gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --prerelease \
+            --title "抽獎NOTE $RELEASE_TAG — Android debug" \
+            --notes-file docs/ANDROID-RELEASE-NOTES.md \
+            "$artifact_dir"/*.apk "$artifact_dir/SHA256SUMS.txt" \
+            "$artifact_dir/apk-verification.json" "$artifact_dir/apk-signature.txt" \
+            "$artifact_dir/emulator-smoke.json"

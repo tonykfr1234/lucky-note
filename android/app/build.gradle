@@ -1,0 +1,51 @@
+import groovy.json.JsonSlurper
+
+plugins { id 'com.android.application' }
+
+def packageInfo = new JsonSlurper().parse(file('../../package.json'))
+def parts = packageInfo.version.tokenize('.').collect { Integer.parseInt(it) }
+def localWeb = file('../../dist-local')
+
+android {
+    namespace 'tw.tony.luckynote'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+    defaultConfig {
+        applicationId 'tw.tony.luckynote'
+        minSdk 26
+        targetSdk 35
+        versionCode parts[0] * 10000 + parts[1] * 100 + parts[2]
+        versionName packageInfo.version
+    }
+    buildFeatures { buildConfig true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets.main.assets.srcDirs = [localWeb, 'src/main/assets']
+    buildTypes {
+        debug { applicationIdSuffix '.debug'; versionNameSuffix '-debug' }
+        release { minifyEnabled false; debuggable false }
+    }
+    lint { abortOnError true; checkReleaseBuilds true }
+}
+
+tasks.register('verifyLocalWebBundle') {
+    inputs.dir(localWeb)
+    doLast {
+        if (!new File(localWeb, 'index.html').isFile()) {
+            throw new GradleException('Missing dist-local/index.html. Run npm run build:local first; do not bundle a server-only build.')
+        }
+        def marker = new File(localWeb, 'build-mode.json')
+        if (!marker.isFile() || new JsonSlurper().parse(marker).mode != 'local-only') {
+            throw new GradleException('Missing local-only build-mode.json. Refusing to create a localhost-dependent APK.')
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'verifyLocalWebBundle' }
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.core:core:1.15.0'
+    testImplementation 'junit:junit:4.13.2'
+}

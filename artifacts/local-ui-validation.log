@@ -1,0 +1,18 @@
+
+> lucky-note@0.2.0 test:local C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> playwright test --config playwright.local.config.ts
+
+[WebServer] (node:66672) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:49320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:56372) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 e2e-local\local.spec.ts:15:1 ??device build works without account, persists rich text and never contacts a backend (4.0s)
+  ok 2 e2e-local\local.spec.ts:39:1 ??Pages subpath renders populated Traditional Chinese preview and target phone layouts (2.2s)
+  ok 3 e2e-local\local.spec.ts:57:1 ??local media persists and JSON export/import roundtrip is user-confirmed (2.9s)
+
+  3 passed (15.0s)

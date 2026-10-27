@@ -1,0 +1,247 @@
+TAP version 13
+# (node:18252) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# closing connection db348bf0-8c44-4972-b9cb-a98890bdc181 (while handling f64c04b0-11a9-4695-a0e5-6a187ba5ba9e) because of exception { code: 4403, reason: 'Connection closed' }
+# Subtest: CRDT: authenticated frame floods are bounded before provider queueing and isolated by session
+ok 1 - CRDT: authenticated frame floods are bounded before provider queueing and isolated by session
+  ---
+  duration_ms: 762.2443
+  type: 'test'
+  ...
+# Subtest: CRDT: production rejects an unverified legacy member directly at websocket authentication
+ok 2 - CRDT: production rejects an unverified legacy member directly at websocket authentication
+  ---
+  duration_ms: 456.0449
+  type: 'test'
+  ...
+# Subtest: CRDT: two real providers merge concurrent edits, offline inserts/deletes and replay after reconnect
+ok 3 - CRDT: two real providers merge concurrent edits, offline inserts/deletes and replay after reconnect
+  ---
+  duration_ms: 482.7535
+  type: 'test'
+  ...
+# closing connection d99ca073-22bf-4ed6-8e10-08e9b1d94634 (while handling 3feb6333-3ae0-4dec-b48b-495c2904de30) because of exception { code: 4403, reason: 'Read-only document' }
+# closing connection d241deff-5a38-4ea0-8f25-f5010553b678 (while handling 3feb6333-3ae0-4dec-b48b-495c2904de30) because of exception { code: 4403, reason: 'Read-only document' }
+# Subtest: CRDT: viewer forged SyncStep2 and Update frames cannot mutate live or stored document
+ok 4 - CRDT: viewer forged SyncStep2 and Update frames cannot mutate live or stored document
+  ---
+  duration_ms: 424.4053
+  type: 'test'
+  ...
+# Subtest: CRDT: cookie, exact Origin, CSRF and per-document ACL guard every connection
+ok 5 - CRDT: cookie, exact Origin, CSRF and per-document ACL guard every connection
+  ---
+  duration_ms: 338.702
+  type: 'test'
+  ...
+# Subtest: CRDT: revocation, logout and expiry close idle readers before subsequent broadcasts
+ok 6 - CRDT: revocation, logout and expiry close idle readers before subsequent broadcasts
+  ---
+  duration_ms: 1096.7661
+  type: 'test'
+  ...
+# [beforeSync] test injected storage failure
+# closing connection 1b982996-8c2b-4052-98cf-b9c1096aeebc (while handling ba8bb61a-5a8a-4f6e-b292-e08756fb4a75) because of exception Error: test injected storage failure
+#     at file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/build/server/collaboration.js:246:119
+#     at transaction (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/build/server/collaboration.js:34:28)
+#     at Object.beforeSync (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/build/server/collaboration.js:245:17)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+#     at async MessageReceiver.readSyncMessage (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/@hocuspocus/server/dist/hocuspocus-server.esm.js:254:19)
+#     at async MessageReceiver.apply (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/@hocuspocus/server/dist/hocuspocus-server.esm.js:190:5)
+#     at async Connection.processMessages (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/@hocuspocus/server/dist/hocuspocus-server.esm.js:463:6)
+#     at async Promise.all (index 0) {
+#   code: 'ERR_SQLITE_ERROR',
+#   errcode: 1811,
+#   errstr: 'constraint failed'
+# }
+# Subtest: CRDT: SQLite journal failure rejects a write before ACK or broadcast
+ok 7 - CRDT: SQLite journal failure rejects a write before ACK or broadcast
+  ---
+  duration_ms: 372.7881
+  type: 'test'
+  ...
+# [beforeSync] Unexpected end of array
+# closing connection b4ce966e-09d9-43b1-a178-91039f0d0cae (while handling fa35e9f1-b886-487d-bc64-ccac6d80a69c) because of exception Error: Unexpected end of array
+#     at Module.create (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/lib0/error.js:12:28)
+#     at file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/lib0/decoding.js:40:41
+#     at ModuleJob.run (node:internal/modules/esm/module_job:329:25)
+#     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+#     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+# Subtest: CRDT: duplicate valid update is idempotent and malformed/oversized messages do not harm the service
+ok 8 - CRDT: duplicate valid update is idempotent and malformed/oversized messages do not harm the service
+  ---
+  duration_ms: 414.5375
+  type: 'test'
+  ...
+# closing connection a46f1eac-62dd-4d21-940e-0f8eab477ed7 (while handling 169dbbbb-2e51-47ba-8e06-6ad0501d9027) because of exception { code: 4403, reason: 'Awareness and stateless messages are disabled' }
+# Subtest: CRDT: awareness is disabled and cannot relay a forged user identity
+ok 9 - CRDT: awareness is disabled and cannot relay a forged user identity
+  ---
+  duration_ms: 253.912
+  type: 'test'
+  ...
+# [CRDT validation in isolated tests] Incomplete update dependencies
+# closing connection 414ccbda-c4da-4a36-af1c-3b550e47e11c (while handling 8b7ad932-e495-4c18-85c9-0700504c64e0) because of exception { code: 4400, reason: 'Invalid or oversized collaborative document' }
+# [CRDT validation in isolated tests] Incomplete update dependencies
+# closing connection 80c448d5-479b-4faa-8e5b-7f0111d82fac (while handling 8b7ad932-e495-4c18-85c9-0700504c64e0) because of exception { code: 4400, reason: 'Invalid or oversized collaborative document' }
+# Subtest: CRDT: unresolved dependency payloads cannot hide invalid state or poison the journal
+ok 10 - CRDT: unresolved dependency payloads cannot hide invalid state or poison the journal
+  ---
+  duration_ms: 345.9448
+  type: 'test'
+  ...
+# Subtest: CRDT: migration preserves drawings, metadata edits do not conflict with body edits, and JSON round-trip retains content
+ok 11 - CRDT: migration preserves drawings, metadata edits do not conflict with body edits, and JSON round-trip retains content
+  ---
+  duration_ms: 282.7544
+  type: 'test'
+  ...
+# Subtest: CRDT: downgrading a live editor closes the old writer and reconnects as read-only
+ok 12 - CRDT: downgrading a live editor closes the old writer and reconnects as read-only
+  ---
+  duration_ms: 369.138
+  type: 'test'
+  ...
+# Subtest: CRDT: deleting a note closes collaborators and delayed persistence cannot resurrect it
+ok 13 - CRDT: deleting a note closes collaborators and delayed persistence cannot resurrect it
+  ---
+  duration_ms: 1507.4952
+  type: 'test'
+  ...
+# Subtest: CRDT: an ACKed edit survives abrupt process termination and restart from SQLite
+ok 14 - CRDT: an ACKed edit survives abrupt process termination and restart from SQLite
+  ---
+  duration_ms: 2545.2581
+  type: 'test'
+  ...
+# (node:8992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: registration, empty states, password validation, session flags and logout
+ok 15 - registration, empty states, password validation, session flags and logout
+  ---
+  duration_ms: 598.6383
+  type: 'test'
+  ...
+# Subtest: private and other-group notes, files, export, members, events and expenses are inaccessible
+ok 16 - private and other-group notes, files, export, members, events and expenses are inaccessible
+  ---
+  duration_ms: 312.1061
+  type: 'test'
+  ...
+# Subtest: viewer cannot mutate; owner can change roles and revoke membership immediately
+ok 17 - viewer cannot mutate; owner can change roles and revoke membership immediately
+  ---
+  duration_ms: 277.0889
+  type: 'test'
+  ...
+# Subtest: optimistic concurrency does not overwrite a more recent edit or delete a new version
+ok 18 - optimistic concurrency does not overwrite a more recent edit or delete a new version
+  ---
+  duration_ms: 159.2395
+  type: 'test'
+  ...
+# Subtest: creation and notebook creation deduplicate; changing an idempotency payload is rejected
+ok 19 - creation and notebook creation deduplicate; changing an idempotency payload is rejected
+  ---
+  duration_ms: 180.9485
+  type: 'test'
+  ...
+# Subtest: notebook cannot cross workspace boundary even for an owner of both
+ok 20 - notebook cannot cross workspace boundary even for an owner of both
+  ---
+  duration_ms: 177.6401
+  type: 'test'
+  ...
+# Subtest: attachments validate MIME/signature, deduplicate, serve range with ACL and remove with note
+ok 21 - attachments validate MIME/signature, deduplicate, serve range with ACL and remove with note
+  ---
+  duration_ms: 188.6368
+  type: 'test'
+  ...
+# Subtest: CSRF and malicious Origin are rejected while same-origin requests work
+ok 22 - CSRF and malicious Origin are rejected while same-origin requests work
+  ---
+  duration_ms: 153.8969
+  type: 'test'
+  ...
+# Subtest: integer expense split conserves total, is deterministic and rejects foreign members/currency
+ok 23 - integer expense split conserves total, is deterministic and rejects foreign members/currency
+  ---
+  duration_ms: 347.0937
+  type: 'test'
+  ...
+# Subtest: settlement only changes balances after recipient confirms, and repeated confirm is harmless
+ok 24 - settlement only changes balances after recipient confirms, and repeated confirm is harmless
+  ---
+  duration_ms: 266.363
+  type: 'test'
+  ...
+# Subtest: export/import restores notes and notebooks once, excludes secrets and rolls back invalid archive
+ok 25 - export/import restores notes and notebooks once, excludes secrets and rolls back invalid archive
+  ---
+  duration_ms: 179.2189
+  type: 'test'
+  ...
+# Subtest: SSE delivers edits to an authorized member and closes when membership is revoked
+ok 26 - SSE delivers edits to an authorized member and closes when membership is revoked
+  ---
+  duration_ms: 284.3627
+  type: 'test'
+  ...
+# Subtest: notes, attachments and idempotency survive server restart with no duplicate records
+ok 27 - notes, attachments and idempotency survive server restart with no duplicate records
+  ---
+  duration_ms: 171.5839
+  type: 'test'
+  ...
+# Subtest: production configuration fails closed; local-auth requires explicit production opt-in
+ok 28 - production configuration fails closed; local-auth requires explicit production opt-in
+  ---
+  duration_ms: 1.4577
+  type: 'test'
+  ...
+# Subtest: CSP explicitly permits only the exact same-origin websocket, including HTTPS production
+ok 29 - CSP explicitly permits only the exact same-origin websocket, including HTTPS production
+  ---
+  duration_ms: 76.1316
+  type: 'test'
+  ...
+# Subtest: large handwritten content and plain HTML-like text round-trip without server execution
+ok 30 - large handwritten content and plain HTML-like text round-trip without server execution
+  ---
+  duration_ms: 235.8686
+  type: 'test'
+  ...
+# Subtest: production email squatting cannot enter a group, including memberships imported from local development
+ok 31 - production email squatting cannot enter a group, including memberships imported from local development
+  ---
+  duration_ms: 406.4518
+  type: 'test'
+  ...
+# Subtest: mutation caches contain no note text and deletion tombstones prevent replay resurrection after restart
+ok 32 - mutation caches contain no note text and deletion tombstones prevent replay resurrection after restart
+  ---
+  duration_ms: 187.1326
+  type: 'test'
+  ...
+# Subtest: legacy full mutation responses are minimized on startup and deleted resources stay gone
+ok 33 - legacy full mutation responses are minimized on startup and deleted resources stay gone
+  ---
+  duration_ms: 172.4035
+  type: 'test'
+  ...
+# Subtest: auth limiting isolates accounts behind one proxy and ignores forged forwarding headers
+ok 34 - auth limiting isolates accounts behind one proxy and ignores forged forwarding headers
+  ---
+  duration_ms: 3374.8375
+  type: 'test'
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 34
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10471.4261

@@ -1,0 +1,15 @@
+
+> lucky-note@0.2.0 test:e2e C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> playwright test "--grep" "two editors"
+
+[WebServer] (node:39956) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:39956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+
+Running 1 test using 1 worker
+
+(node:38160) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 e2e\collaboration.spec.ts:5:1 ??two editors merge live and disconnected rich-text changes, while viewer and revoked member cannot write (9.4s)
+
+  1 passed (17.2s)

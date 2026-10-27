@@ -24,7 +24,7 @@ Galaxy S26 標準版官方規格是 6.3 吋、1080 × 2340 硬體像素；iPhone
 - 真實文件／採買／SOP／待辦／分帳示範資料；圖中不是 Markdown 原碼，也不是 AI mockup。
 - 10 個 AI 縮圖延遲載入，只載入選取的完整背景；私人 API 不進 service worker cache。
 
-本機開啟 [/viewport-diagnostics.html](/viewport-diagnostics.html) 可查看 screen、innerWidth/Height、DPR、visualViewport、standalone 與含安全區的 padding。數值僅在本機頁面顯示，不儲存或上傳，也不辨識裝置型號。之後可在真機旋轉、開鍵盤、改顯示縮放與安裝模式時校準。
+本機開啟 http://127.0.0.1:4317/viewport-diagnostics.html（[頁面原始碼](../public/viewport-diagnostics.html)） 可查看 screen、innerWidth/Height、DPR、visualViewport、standalone 與含安全區的 padding。數值僅在本機頁面顯示，不儲存或上傳，也不辨識裝置型號。之後可在真機旋轉、開鍵盤、改顯示縮放與安裝模式時校準。
 
 測試程式：e2e/populated.spec.ts。實際矩陣：artifacts/device-layout-matrix.json；執行紀錄：artifacts/e2e.log、artifacts/device-layout.log。截圖位於 docs/screenshots/，檔名中的 galaxy-s26 代表適配假設，不代表實機完成。
 

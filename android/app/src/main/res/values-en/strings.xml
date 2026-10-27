@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">抽獎NOTE</string>
+    <string name="choose_file">Choose a photo or file</string>
+    <string name="open_failed">This action could not open. Use the system file picker or browser.</string>
+    <string name="download_unavailable">This WebView cannot directly download this file. Update Android System WebView or export in the browser. No saved file was confirmed.</string>
+    <string name="load_failed">The bundled page could not load. Reopen the app; if it still fails, check the APK web assets.</string>
+    <string name="exit_title">Leave LuckyNote?</string>
+    <string name="exit_message">Data already saved on this device will remain. Check that current changes have been saved.</string>
+    <string name="stay">Stay</string>
+    <string name="leave">Leave</string>
+</resources>

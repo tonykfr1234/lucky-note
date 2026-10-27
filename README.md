@@ -1,102 +1,158 @@
-# 抽獎NOTE · LuckyNote
+<p align="center"><img src="public/icon-192.png" alt="抽獎NOTE 圖示" width="112" height="112"></p>
+<h1 align="center">抽獎NOTE · LuckyNote</h1>
+<p align="center">旅行清單、筆記、手寫與共同費用，放在同一個空間。</p>
+<p align="center">
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/source-v0.2.0-2d6450" alt="原始碼版本 0.2.0"></a>
+  <a href="https://github.com/tonykfr1234/lucky-note/actions/workflows/ci.yml"><img src="https://github.com/tonykfr1234/lucky-note/actions/workflows/ci.yml/badge.svg" alt="實際 GitHub CI 狀態"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 授權"></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/languages-繁中%20%7C%20English-66795c" alt="繁體中文與英文"></a>
+</p>
+<p align="center">
+  <strong>繁體中文</strong> · <a href="README.en.md">English</a> ·
+  <a href="CHANGELOG.md">更新紀錄</a> · <a href="CONTRIBUTING.md">參與開發</a> ·
+  <a href="https://github.com/tonykfr1234/lucky-note/releases">下載／Releases</a>
+</p>
 
-把旅行清單、日常筆記、SOP、手寫和共同費用放進同一個工作空間。LuckyNote 是可自行部署的響應式網頁與 PWA，預設名稱「抽獎NOTE」，提供繁體中文與英文介面；App 內品牌名稱、圖示和外觀可依裝置自訂。
+LuckyNote 是可自行部署的響應式網頁與 PWA，也提供裝置儲存模式及 Android WebView 封裝原始碼。介面支援繁體中文／英文、深淺色、頭像、自訂 App 內品牌，以及 10 款 AI 生成背景。
 
-本專案是獨立實作，參考 AFFiNE 的文件／白板體驗與 AppFlowy 的工作空間／資料庫視圖。沒有移植整套上游產品，也不宣稱擁有它們的全部功能。[選型與授權研究](docs/RESEARCH.md) 說明取捨。
+**0.2.0 已實作 Tiptap＋Yjs＋Hocuspocus 多人正文協作**：同時編輯、開啟中分頁斷線後重新合併，以及伺服器持久化。這是獨立專案；[選型研究](docs/RESEARCH.md) 提供設計參考，參考產品的功能不會自動成為本專案功能。
 
-> 這是第一版可擴充核心。功能實作、測試結果與外部配置需求分開列在 [驗收表](docs/ACCEPTANCE.md)。Google、LINE、OpenAI 沒有憑證時會顯示「尚未連接」；本次交付沒有建立 OAuth 授權、寄信、推播、付款或部署公開執行服務。
+## 使用模式與發布狀態
 
-## 實際畫面
+| 模式 | 資料在哪裡 | 適用功能 |
+| --- | --- | --- |
+| 自行部署伺服器／PWA | 你的伺服器 SQLite 與附件目錄 | 帳號、私人／群組、多人協作、共同分帳；整合需另外配置 |
+| 裝置模式／Android 封裝 | 該瀏覽器 origin 或 App 的 IndexedDB | 個人筆記、模板、附件、手寫、個人費用與匯入匯出；沒有伺服器帳號或協作連線 |
+| 靜態 Pages 預覽 | 該瀏覽器的 IndexedDB | 裝置模式體驗；預覽示例不是其他使用者資料，內容不會自動同步至伺服器 |
 
-以下為本機運行版本與乾淨示範資料的真實截圖。手機圖使用瀏覽器 mobile viewport，未代表真機安裝。
+- **Pages 預期入口，尚待 CI／發布確認：** [tonykfr1234.github.io/lucky-note](https://tonykfr1234.github.io/lucky-note/)。目前不宣稱網址已可用；發布後仍是裝置模式預覽。
+- **Android debug APK，尚待 CI 產物／發布確認：** [Android workflow](https://github.com/tonykfr1234/lucky-note/actions/workflows/android.yml) 與 [Releases](https://github.com/tonykfr1234/lucky-note/releases)。只有實際 APK、驗簽及 SHA-256 報告存在時才算可下載版本，詳見 [Android 說明](docs/ANDROID.md)。
+- **iPhone：** 使用網頁／PWA；沒有 iOS IPA。手機截圖及尺寸模擬不代表真機安裝驗收。
 
-![繁中桌面文件](docs/screenshots/desktop-note-zh.png)
+Android 內含裝置前端，不需要開著另一台電腦。它是 **debug 開發版 WebView 封裝**，未配置正式簽章或商店發行；HTTPS 協作服務交由系統瀏覽器開啟。不同 debug 簽章可能無法覆蓋升級，移除 App 前請先匯出筆記。
 
-[iPhone 16 Pro Max 瀏覽器尺寸模擬](docs/screenshots/iphone16-pro-max-portrait.png) · [Galaxy S26 360–412 CSS px 適配測試](docs/screenshots/galaxy-s26-360-portrait.png) · [分帳本](docs/screenshots/desktop-ledger-zh.png) · [AI 背景選擇器](docs/screenshots/background-gallery-zh.png)
+## Features · 功能
 
-[兩款手機驗收矩陣與真機校準](docs/MOBILE-VALIDATION.md)。舊版空狀態圖片保留作補充。
-
-## 快速開始
-
-需要 Node.js 22.17 以上的 22.x 版本或相容的新 LTS，以及 npm。後端使用 Node 內建 SQLite，22.x 啟動時可能顯示實驗性功能提示。第一次安裝需要連線至官方 npm registry。
-
-```sh
-npm ci
-npm run build
-npm start
-```
-
-開啟 `http://127.0.0.1:4317`。本機模式使用真正的電子郵件／密碼帳號，密碼經 scrypt 雜湊；輸入任意電子郵件並不能登入別人的帳號。建立帳號後從空的私人空間開始，不預先植入看似真實的使用者資料。
-
-如需設定，複製 `.env.example` 為 `.env` 並依檔案說明填寫。`.env`、資料庫、上傳附件與備份都不得提交到 GitHub。正式模式要求安全的 session 設定與 HTTPS origin；Google 登入與 Drive／Calendar／Gmail 授權分別配置，登入成功不等於已取得其他服務的權限。
-
-## 使用流程
-
-1. 建立私人或群組空間，新增筆記本，再選擇適合的模板開始。
-2. 在文件內編輯內容與勾選清單；以筆記視圖整理資料，搭配搜尋與標籤。
-3. 明確選取照片、影片或檔案上傳，也可開啟手寫畫布。相機功能仍受瀏覽器與裝置權限影響。
-4. 群組擁有者可將已註冊的帳號加入為編輯者或檢視者。這不會寄送邀請郵件。
-5. 共同費用帳本記錄誰先付款、由誰分攤，再產生結清建議。建議不會轉帳、不代表收款人已確認收款。
-6. 在工具頁查看服務配置狀態。只有經預覽與明確確認的操作才應呼叫外部服務。
-
-## 同步與離線界線
-
-SQLite 儲存伺服器資料；SSE 通知其他開啟中的視窗重新讀取，儲存時以版本號防止覆蓋別人的修改。遇到版本衝突需要由使用者處理，沒有 CRDT 字元級合併，也沒有離線多人分支自動合併。
-
-PWA 安裝的是同一份網頁程式。目前設定頁的名稱與圖示自訂只影響 App 內品牌和分頁標題，不會改寫部署的 manifest。OS 安裝名稱與圖示使用 `public/manifest.webmanifest` 和其中指定的圖示資產；需要部署者修改這些檔案並重新建置，再由平台更新或重新安裝。只改 App 內設定後重新安裝，不會套用這些本機偏好。公開 shell 可快取，私人 API、附件與群組筆記不由 service worker 快取。撤權會阻止後續伺服器存取，但不能回收使用者已經另存的副本。
-
-## 整合與安全邊界
-
-| 功能 | 邊界 |
+| 功能 | 0.2.0 實際範圍 |
 | --- | --- |
-| Google 登入 | 需要自己的 OAuth client；不自動取得其他 Google 服務授權 |
-| 群組 Google Drive | 附件／快照儲存，不能取代工作空間 ACL 或即時協作資料庫 |
-| Calendar／Gmail／LINE | 伺服器端配置、指定群組與目的地、預覽後確認；本次沒有真實送出驗證 |
-| AI 分類／翻譯／語音 | API key 僅在伺服器；先選取來源、日期與預算，再預覽與確認 |
-| 相簿 | 不會背景掃描整個手機相簿；Google Photos 既有內容需要 Picker 主動選取 |
-| 分帳 | 整數最小幣值、確定性尾差分配、結清建議；沒有 LINE Pay P2P 或代管資金 |
+| 筆記與整理 | Tiptap 富文字、可勾選清單、筆記本、標籤、搜尋、卡片／表格／看板視圖 |
+| 模板 | 12 種用途＋空白：旅行、行李、採買、旅行購物、待辦、SOP、會議、手記、學習、費用、維修、靈感 |
+| 媒體與手寫 | 主動選取照片／影片／檔案、相機入口、20 MB 附件限制；筆色、粗細、橡皮擦、撤銷／重做、PNG 與可再編輯筆跡 |
+| 真正共同編輯 | 伺服器模式以 Yjs 合併正文；SQLite journal 在套用／確認前提交，重啟可恢復；標題、標籤等使用獨立版本控制 |
+| 私人與群組 | owner／editor／viewer、逐請求與逐訊息 ACL、撤權與 session 失效斷線；正式 Email 分享要求已驗證 Google 身分 |
+| 分帳 | 群組 TWD 整數最小幣值、確定性尾差、每人餘額、結清建議及收款人確認；裝置模式只有個人費用 |
+| 語言與外觀 | 繁中／英文、深淺色、頭像、App 內名稱／圖示、10 款 AI 背景及自訂背景 |
+| 資料可攜 | 筆記／筆記本 JSON 匯出匯入、Markdown 匯出；JSON 不含附件、帳本、成員或協作歷史 |
+| 可擴充工具 | Google 登入、Drive、Calendar、Gmail、LINE Messaging API、AI 分類／翻譯有伺服器實作介面；無憑證時明示未配置。STT adapter 已有測試，付費操作 UI 尚未開放 |
 
-[整合設定](docs/INTEGRATIONS.md) 與 [安全政策](SECURITY.md) 提供進一步說明。OpenAI API 計費與 ChatGPT 訂閱不同；`store:false` 不代表供應商端絕對零保留。
+**手寫的協作單位是整張畫布。** 完整筆跡值保存於 metadata.sketch；同時修改會提示處理替換，不是逐筆線條 CRDT。此版停用 awareness，沒有多人游標或線上人數功能。
 
-## 驗證
+App 內名稱／圖示設定不會改寫作業系統安裝資訊；PWA 安裝名稱與圖示取自部署的 manifest，Android launcher 資訊取自 APK resources。
 
-```sh
-npm run typecheck
-npm run lint
-npm test
-npm run build
-npm run test:e2e
-```
+## Screenshots · 實際畫面
 
-瀏覽器測試需要 Playwright 支援的 Chromium。Windows 驗收使用已安裝的 Chrome 預設路徑 C:/Program Files/Google/Chrome/Application/chrome.exe；不同安裝位置請調整 playwright.config.ts 的 executablePath。Linux CI 會安裝 Playwright Chromium。實際執行環境、通過項目、不能執行的驗證與紀錄位置以 [驗收表](docs/ACCEPTANCE.md) 為準。外部 provider 的 mock 測試只驗證請求／錯誤處理，不等同真實 OAuth 或實際送達。
+運行中的 App 與合成測試資料；手機欄為瀏覽器 viewport／layout 驗證，不是實體 iPhone 或 Galaxy 安裝截圖。
 
-## 部署、備份與還原
+<table>
+  <tr><th>桌面協作編輯器</th><th>iPhone 16 Pro Max 尺寸</th><th>Galaxy S26 尺寸範圍</th></tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/collaborative-editor-zh.png" alt="繁中桌面協作編輯器" height="220"></td>
+    <td align="center"><img src="docs/screenshots/iphone16-pro-max-portrait.png" alt="iPhone 尺寸繁中筆記" height="220"></td>
+    <td align="center"><img src="docs/screenshots/galaxy-s26-360-portrait.png" alt="Samsung 360 CSS px 筆記" height="220"></td>
+  </tr>
+</table>
 
-先使用本機模式檢查核心流程。具體 Node／正式／Docker 指令與備份還原見 [部署說明](docs/DEPLOYMENT.md)。已有 Docker 的電腦可用 `docker compose -f compose.local.yaml up --build -d` 試用；本次 GE76 沒有 Docker CLI，容器流程尚未實測。正式 `compose.yaml` 保留 HTTPS／session 安全設定檢查。本次沒有改動防火牆，也沒有啟動公開網路服務。
+[分帳本](docs/screenshots/desktop-ledger-zh.png) · [手機看板](docs/screenshots/mobile-board-zh.png) · [背景選擇器](docs/screenshots/background-gallery-zh.png) · [手機驗證與真機限制](docs/MOBILE-VALIDATION.md)
 
-完整還原需要一致的資料庫和附件：先停止服務，將整個 `DATA_DIR` 複製到安全位置，再另外備份伺服器設定。不要在服務寫入期間只複製單一 SQLite 主檔而忽略 WAL／SHM。備份含私人筆記、帳號雜湊和媒體，應限制權限並加密存放。
+## Quick Start · 快速開始
 
-還原時先停止服務、保留目前資料目錄作回復點，再把同一份備份的完整資料目錄放回，恢復目錄權限與設定後啟動。用測試帳號檢查登入、筆記和附件；不要把正式備份拿去公開示範。UI 匯出／匯入的覆蓋範圍請看驗收表，不能當成完整系統備份。
+需要 Node.js **22.17+** 與 npm **8+**。在此專案根目錄執行，首次安裝需要 npm registry。
 
-## English quick start
+### 伺服器模式
 
-LuckyNote is a self-hosted notes and shared-workspace PWA with Traditional Chinese and English UI. Requires Node.js 22.17+ and npm.
-
-```sh
-npm ci
+~~~sh
+npm ci --ignore-scripts
 npm run build
 npm start
-```
+~~~
 
-Open `http://127.0.0.1:4317` and create a local password account. Configure production HTTPS, sessions and OAuth separately before hosting for multiple users. Do not commit `.env`, user databases, media, tokens or backups. External providers are unavailable until explicitly configured; adapter unit tests do not prove live delivery. See [acceptance results](docs/ACCEPTANCE.md), [architecture](docs/ARCHITECTURE.md), [integrations](docs/INTEGRATIONS.md) and [security](SECURITY.md).
+開啟 http://127.0.0.1:4317，建立本機密碼帳號。預設只綁定本機，資料保存在 ./data/；這個「本機伺服器」與 IndexedDB 裝置模式不同。Node 22 的內建 SQLite 可能顯示實驗性警告。
 
-## 後續路線
+密碼採 scrypt 雜湊。本機註冊**不驗證 Email 所有權**，開發群組帳號只適合測試；正式群組分享要求擁有者與受邀者皆有 Google 已驗證身分。正式啟動需要 HTTPS APP_ORIGIN、安全 SESSION_SECRET 與登入設定，缺失時拒絕啟動。
 
-- 文件 CRDT 與離線分支合併，搭配授權撤銷與資料遷移測試。
-- 更完整的可編輯資料庫欄位、白板物件與跨文件連結。
-- 每個群組自行連接 Google 服務的管理介面與 token 生命週期。
-- Google Photos Picker、可插拔 AI provider、預算報表與人工分類回饋。
-- 外部通知佇列、重試／不確定結果處理、安靜時段與送達稽核。
-- 原生平台安裝驗證、無障礙檢查及更完整的備份／還原工具。
+複製 [.env.example](.env.example) 為 .env 後依 [部署說明](docs/DEPLOYMENT.md) 設定。.env、資料庫、附件、token、keystore 和備份不得提交 GitHub。未填固定本機 session secret 時，重啟需要重新登入，筆記仍會保留。
 
-程式碼授權與實際納入套件見根目錄 [LICENSE](LICENSE)、[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；研究參考的產品不等於本專案依賴。
+### 裝置模式與 Pages 路徑的本機預覽
+
+~~~sh
+npm run build:local
+npm run preview:local
+~~~
+
+開啟 http://127.0.0.1:4320。此服務只提供靜態檔案；資料存於瀏覽器 IndexedDB，不需要登入或 API 伺服器。
+
+~~~sh
+npm run build:preview
+npm run preview:web
+~~~
+
+開啟 http://127.0.0.1:4320/lucky-note/ 驗證預期 Pages 路徑。兩個預覽服務使用相同預設 port，請一次執行一個。建置完成不等於已部署 Pages。
+
+瀏覽器、網站 origin 與 APK 各有獨立資料。清除網站資料、私密瀏覽或移除 App 可能造成資料消失；請定期手動匯出並另外保存附件。JSON 不是完整備份。裝置模式匯入 JSON 筆記時，只轉換內容中支援的 Markdown 區塊，其他 inline 語法保留為文字。Pages 仍需載入網站資產，不保證離線冷啟動；APK 則內建前端資產。
+
+### Docker
+
+已有 Docker／Compose 的環境可用：
+
+~~~sh
+docker compose -f compose.local.yaml up --build -d
+~~~
+
+開啟 http://127.0.0.1:4317。正式 compose.yaml 與備份／還原步驟見 [部署說明](docs/DEPLOYMENT.md)。GE76 沒有 Docker CLI，容器建置及 volume 還原尚未實測。
+
+## 同步、離線與整合邊界
+
+伺服器模式以 Yjs 為正文來源，Markdown 是搜尋與匯出投影，SSE 負責清單／中繼資料刷新。**開啟中的分頁**斷線時會把修改留在記憶體，重連後合併；尚未送達的修改不會寫入伺服器模式的 IndexedDB，關閉／重載分頁可能失去它們。此範圍不等於完整離線筆記庫。私人 API、附件與群組資料不由 service worker 快取。
+
+| 整合 | 邊界 |
+| --- | --- |
+| Google 登入 | 需要 OAuth client／redirect；登入不等於取得 Drive、Calendar 或 Gmail 授權 |
+| 群組 Google Drive | 附件／快照儲存，不取代 ACL 或 CRDT 資料庫；個人共用資料夾不等於 Workspace Shared Drive |
+| Calendar／Gmail／LINE | 個別授權、指定工作空間與目的地、預覽後確認；真實外部送達仍待憑證驗收 |
+| AI 分類／翻譯 | key 僅留伺服器；選取來源、日期／時區、預算、預覽及人工確認。OpenAI API 計費與 ChatGPT 訂閱分開 |
+| 相簿 | 不背景掃描整個相簿；Google Photos Picker 尚未實作 |
+| 分帳／付款 | 只記帳、結清建議及人工確認；不操作 LINE Pay P2P、不轉帳或代管資金 |
+
+詳見 [整合設定](docs/INTEGRATIONS.md)。沒有代為建立 OAuth grant 或執行真實推播、寄信、行程建立、支付。store:false 不代表供應商端絕對零保留。
+
+## 驗證與開發
+
+~~~sh
+npm run verify
+npm run test:e2e
+npm run test:local
+~~~
+
+0.2.0 本機驗證：**116 項自動測試、7 項伺服器 UI、2 項裝置 UI 通過**。另有 [34 項核心／協作安全回歸](artifacts/backend-crdt-tests.log)、[真實多人瀏覽器合併](artifacts/collaboration-browser.log) 與 [前端驗證紀錄](artifacts/frontend-crdt-validation.md)。覆蓋跨群組拒讀、viewer 偽造更新、撤權、session 過期、寫入失敗、ACK 後強制終止重啟恢復，以及同時／斷線編輯合併。完整紀錄見 [驗收表](docs/ACCEPTANCE.md)；GitHub CI 徽章反映遠端實際狀態，不由本機結果推定。
+
+Playwright 在 Windows 使用設定中的 Chrome 路徑，CI 使用 Chromium。Mock provider 測試不代表真實外部送達；Android build、驗簽、模擬器與真機驗收也各自獨立。貢獻流程見 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 文件與授權
+
+| 文件 | 內容 |
+| --- | --- |
+| [架構](docs/ARCHITECTURE.md) | 儲存、ACL、協作與擴充 |
+| [部署](docs/DEPLOYMENT.md) | Node／Docker、正式設定、備份還原 |
+| [整合](docs/INTEGRATIONS.md) | Google、LINE、AI 配置與限制 |
+| [驗收](docs/ACCEPTANCE.md) | 已實作、已測、需憑證與待完成項目 |
+| [Android](docs/ANDROID.md) | debug APK、權限、匯出、CI／真機界線 |
+| [安全政策](SECURITY.md) | 安全邊界與問題回報 |
+| [更新紀錄](CHANGELOG.md) · [English changelog](CHANGELOG.en.md) | 版本變更與發布狀態 |
+
+後續工作包括伺服器模式完整離線儲存、逐筆畫布協作、群組 OAuth／token 管理、Google Photos Picker、可靠排程通知、正式 Android 簽章與真機驗收，以及完整無障礙稽核。沒有端到端加密承諾；資料及備份需要部署者妥善保護。
+
+本專案原始碼採 [MIT License](LICENSE)。套件聲明見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)；研究參考專案不是全部被納入的依賴。
+
+---
+
+**Build by Tony · 2026 年製作**

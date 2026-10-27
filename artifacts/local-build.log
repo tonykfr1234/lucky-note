@@ -1,0 +1,17 @@
+
+> lucky-note@0.2.0 build:local C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> vite build --mode local && node scripts/write-local-marker.mjs dist-local
+
+error during build:
+Error: "local" cannot be used as a mode name because it conflicts with the .local postfix for .env files.
+    at loadEnv (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/vite/dist/node/chunks/config.js:9399:30)
+    at resolveConfig (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/vite/dist/node/chunks/config.js:35781:18)
+    at async createBuilder (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/vite/dist/node/chunks/config.js:34126:19)
+    at async CAC.<anonymous> (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/node_modules/vite/dist/node/cli.js:629:10)
+npm ERR! code ELIFECYCLE
+npm ERR! errno 1
+npm ERR! lucky-note@0.2.0 build:local: `vite build --mode local && node scripts/write-local-marker.mjs dist-local`
+npm ERR! Exit status 1
+npm ERR! 
+npm ERR! Failed at the lucky-note@0.2.0 build:local script.
+npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
