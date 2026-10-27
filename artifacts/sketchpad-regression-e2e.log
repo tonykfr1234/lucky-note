@@ -1,0 +1,15 @@
+
+> lucky-note@0.1.0 test:e2e C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> playwright test "--grep" "handwriting"
+
+[WebServer] (node:67380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:67380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+
+Running 1 test using 1 worker
+
+(node:33252) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 e2e\app.spec.ts:80:1 ??handwriting undo/redo saves editable strokes and protected PNG attachment (2.6s)
+
+  1 passed (6.7s)

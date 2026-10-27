@@ -1,0 +1,15 @@
+
+> lucky-note@0.1.0 test:e2e C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> playwright test "--grep" "Traditional Chinese"
+
+[WebServer] (node:61892) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:61892) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+
+Running 1 test using 1 worker
+
+(node:48132) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 e2e\populated.spec.ts:6:1 ??Traditional Chinese populated workspace, readable mobile document and real shared ledger (20.8s)
+
+  1 passed (24.7s)

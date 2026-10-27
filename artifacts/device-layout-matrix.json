@@ -1,0 +1,110 @@
+{
+  "browserEngine": "Chromium",
+  "physicalDeviceTested": false,
+  "layouts": [
+    {
+      "name": "iphone16-pro-max-portrait",
+      "viewport": {
+        "width": 440,
+        "height": 763
+      },
+      "screen": {
+        "width": 440,
+        "height": 956
+      },
+      "deviceScaleFactor": 3,
+      "source": "Installed Playwright device descriptor; Chromium layout simulation, not physical Safari."
+    },
+    {
+      "name": "iphone16-pro-max-landscape",
+      "viewport": {
+        "width": 838,
+        "height": 390
+      },
+      "screen": {
+        "width": 440,
+        "height": 956
+      },
+      "deviceScaleFactor": 3,
+      "source": "Installed Playwright landscape descriptor; Chromium layout simulation."
+    },
+    {
+      "name": "iphone16-pro-max-pwa-layout",
+      "viewport": {
+        "width": 440,
+        "height": 956
+      },
+      "screen": {
+        "width": 440,
+        "height": 956
+      },
+      "deviceScaleFactor": 3,
+      "source": "Full-screen CSS layout assumption; not an installed PWA verification."
+    },
+    {
+      "name": "iphone16-pro-max-pwa-landscape-layout",
+      "viewport": {
+        "width": 956,
+        "height": 440
+      },
+      "screen": {
+        "width": 440,
+        "height": 956
+      },
+      "deviceScaleFactor": 3,
+      "source": "Full-screen landscape CSS layout assumption; not an installed PWA verification."
+    },
+    {
+      "name": "galaxy-s26-360-portrait",
+      "viewport": {
+        "width": 360,
+        "height": 780
+      },
+      "screen": {
+        "width": 360,
+        "height": 780
+      },
+      "deviceScaleFactor": 3,
+      "source": "Galaxy S26 synthetic adaptation assumption, not a verified physical CSS viewport."
+    },
+    {
+      "name": "galaxy-s26-360-landscape",
+      "viewport": {
+        "width": 780,
+        "height": 360
+      },
+      "screen": {
+        "width": 360,
+        "height": 780
+      },
+      "deviceScaleFactor": 3,
+      "source": "Galaxy S26 synthetic landscape adaptation assumption."
+    },
+    {
+      "name": "galaxy-s26-412-portrait",
+      "viewport": {
+        "width": 412,
+        "height": 892
+      },
+      "screen": {
+        "width": 412,
+        "height": 892
+      },
+      "deviceScaleFactor": 2.625,
+      "source": "Galaxy S26 display-zoom adaptation assumption, not a verified physical CSS viewport."
+    },
+    {
+      "name": "galaxy-s26-412-landscape",
+      "viewport": {
+        "width": 892,
+        "height": 412
+      },
+      "screen": {
+        "width": 412,
+        "height": 892
+      },
+      "deviceScaleFactor": 2.625,
+      "source": "Galaxy S26 synthetic landscape display-zoom adaptation assumption."
+    }
+  ]
+}

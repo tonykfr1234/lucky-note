@@ -1,0 +1,340 @@
+
+> lucky-note@0.1.0 verify C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> npm run typecheck && npm run lint && npm test && npm run build
+
+
+> lucky-note@0.1.0 typecheck C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit
+
+
+> lucky-note@0.1.0 lint C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> eslint src server tests scripts vite.config.ts playwright.config.ts
+
+
+> lucky-note@0.1.0 test C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> npm run build:server && node scripts/test.mjs
+
+
+> lucky-note@0.1.0 build:server C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> tsc -p tsconfig.server.json
+
+TAP version 13
+# (node:62880) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: registration, empty states, password validation, session flags and logout
+ok 1 - registration, empty states, password validation, session flags and logout
+  ---
+  duration_ms: 488.4157
+  type: 'test'
+  ...
+# Subtest: private and other-group notes, files, export, members, events and expenses are inaccessible
+ok 2 - private and other-group notes, files, export, members, events and expenses are inaccessible
+  ---
+  duration_ms: 238.8709
+  type: 'test'
+  ...
+# Subtest: viewer cannot mutate; owner can change roles and revoke membership immediately
+ok 3 - viewer cannot mutate; owner can change roles and revoke membership immediately
+  ---
+  duration_ms: 215.8729
+  type: 'test'
+  ...
+# Subtest: optimistic concurrency does not overwrite a more recent edit or delete a new version
+ok 4 - optimistic concurrency does not overwrite a more recent edit or delete a new version
+  ---
+  duration_ms: 127.1959
+  type: 'test'
+  ...
+# Subtest: creation and notebook creation deduplicate; changing an idempotency payload is rejected
+ok 5 - creation and notebook creation deduplicate; changing an idempotency payload is rejected
+  ---
+  duration_ms: 123.3045
+  type: 'test'
+  ...
+# Subtest: notebook cannot cross workspace boundary even for an owner of both
+ok 6 - notebook cannot cross workspace boundary even for an owner of both
+  ---
+  duration_ms: 110.7081
+  type: 'test'
+  ...
+# Subtest: attachments validate MIME/signature, deduplicate, serve range with ACL and remove with note
+ok 7 - attachments validate MIME/signature, deduplicate, serve range with ACL and remove with note
+  ---
+  duration_ms: 123.9658
+  type: 'test'
+  ...
+# Subtest: CSRF and malicious Origin are rejected while same-origin requests work
+ok 8 - CSRF and malicious Origin are rejected while same-origin requests work
+  ---
+  duration_ms: 103.3584
+  type: 'test'
+  ...
+# Subtest: integer expense split conserves total, is deterministic and rejects foreign members/currency
+ok 9 - integer expense split conserves total, is deterministic and rejects foreign members/currency
+  ---
+  duration_ms: 307.1292
+  type: 'test'
+  ...
+# Subtest: settlement only changes balances after recipient confirms, and repeated confirm is harmless
+ok 10 - settlement only changes balances after recipient confirms, and repeated confirm is harmless
+  ---
+  duration_ms: 204.8669
+  type: 'test'
+  ...
+# Subtest: export/import restores notes and notebooks once, excludes secrets and rolls back invalid archive
+ok 11 - export/import restores notes and notebooks once, excludes secrets and rolls back invalid archive
+  ---
+  duration_ms: 132.5144
+  type: 'test'
+  ...
+# Subtest: SSE delivers edits to an authorized member and closes when membership is revoked
+ok 12 - SSE delivers edits to an authorized member and closes when membership is revoked
+  ---
+  duration_ms: 212.4546
+  type: 'test'
+  ...
+# Subtest: notes, attachments and idempotency survive server restart with no duplicate records
+ok 13 - notes, attachments and idempotency survive server restart with no duplicate records
+  ---
+  duration_ms: 120.4316
+  type: 'test'
+  ...
+# Subtest: production configuration fails closed; local-auth requires explicit production opt-in
+ok 14 - production configuration fails closed; local-auth requires explicit production opt-in
+  ---
+  duration_ms: 0.896
+  type: 'test'
+  ...
+# Subtest: large handwritten content and plain HTML-like text round-trip without server execution
+ok 15 - large handwritten content and plain HTML-like text round-trip without server execution
+  ---
+  duration_ms: 122.6138
+  type: 'test'
+  ...
+# (node:63504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: integration status requires authentication and never exposes server secrets
+ok 16 - integration status requires authentication and never exposes server secrets
+  ---
+  duration_ms: 8.1235
+  type: 'test'
+  ...
+# Subtest: private workspaces and non-owners cannot export through provider routes
+ok 17 - private workspaces and non-owners cannot export through provider routes
+  ---
+  duration_ms: 3.3267
+  type: 'test'
+  ...
+# Subtest: external preview does not send; missing confirmation and credentials fail honestly
+ok 18 - external preview does not send; missing confirmation and credentials fail honestly
+  ---
+  duration_ms: 4.4166
+  type: 'test'
+  ...
+# Subtest: external confirmation is idempotent and rejects reuse of the mutation key for changed content
+ok 19 - external confirmation is idempotent and rejects reuse of the mutation key for changed content
+  ---
+  duration_ms: 37.3796
+  type: 'test'
+  ...
+# Subtest: uncertain external outcome blocks all automatic retries including a fresh matching preview
+ok 20 - uncertain external outcome blocks all automatic retries including a fresh matching preview
+  ---
+  duration_ms: 4.8291
+  type: 'test'
+  ...
+# Subtest: external confirmation rechecks current provider binding against the preview
+ok 21 - external confirmation rechecks current provider binding against the preview
+  ---
+  duration_ms: 1.9972
+  type: 'test'
+  ...
+# Subtest: AI previews explicit metadata only, respects cutoff timezone, and blocks empty/foreign/duplicate selections
+ok 22 - AI previews explicit metadata only, respects cutoff timezone, and blocks empty/foreign/duplicate selections
+  ---
+  duration_ms: 40.0651
+  type: 'test'
+  ...
+# Subtest: AI missing credentials never calls provider or consumes budget
+ok 23 - AI missing credentials never calls provider or consumes budget
+  ---
+  duration_ms: 4.7027
+  type: 'test'
+  ...
+# Subtest: AI suggestion requires a second explicit classification; repeated calls do not double charge or apply
+ok 24 - AI suggestion requires a second explicit classification; repeated calls do not double charge or apply
+  ---
+  duration_ms: 6.5272
+  type: 'test'
+  ...
+# Subtest: AI stale preview cannot overwrite a concurrently edited note and daily budget is enforced
+ok 25 - AI stale preview cannot overwrite a concurrently edited note and daily budget is enforced
+  ---
+  duration_ms: 8.3212
+  type: 'test'
+  ...
+# Subtest: translation idempotency is user scoped and a second member cannot receive another user result
+ok 26 - translation idempotency is user scoped and a second member cannot receive another user result
+  ---
+  duration_ms: 3.4691
+  type: 'test'
+  ...
+# Subtest: Google OAuth is explicitly unavailable without configuration
+ok 27 - Google OAuth is explicitly unavailable without configuration
+  ---
+  duration_ms: 1.1867
+  type: 'test'
+  ...
+# Subtest: Google OAuth starts with PKCE and limited scopes; cancellation consumes one-time state
+ok 28 - Google OAuth starts with PKCE and limited scopes; cancellation consumes one-time state
+  ---
+  duration_ms: 2.8985
+  type: 'test'
+  ...
+# Subtest: Google OIDC verifies signature audience nonce and matching userinfo using mocked official endpoints
+ok 29 - Google OIDC verifies signature audience nonce and matching userinfo using mocked official endpoints
+  ---
+  duration_ms: 231.8444
+  type: 'test'
+  ...
+# Subtest: Google OIDC rejects tampered signature, wrong audience/issuer/nonce, expired tokens and mismatched userinfo
+    # Subtest: signature
+    ok 1 - signature
+      ---
+      duration_ms: 4.8244
+      type: 'test'
+      ...
+    # Subtest: audience
+    ok 2 - audience
+      ---
+      duration_ms: 4.3826
+      type: 'test'
+      ...
+    # Subtest: issuer
+    ok 3 - issuer
+      ---
+      duration_ms: 5.1381
+      type: 'test'
+      ...
+    # Subtest: nonce
+    ok 4 - nonce
+      ---
+      duration_ms: 3.6347
+      type: 'test'
+      ...
+    # Subtest: expiry
+    ok 5 - expiry
+      ---
+      duration_ms: 2.6572
+      type: 'test'
+      ...
+    # Subtest: userinfo
+    ok 6 - userinfo
+      ---
+      duration_ms: 3.6536
+      type: 'test'
+      ...
+    1..6
+ok 30 - Google OIDC rejects tampered signature, wrong audience/issuer/nonce, expired tokens and mismatched userinfo
+  ---
+  duration_ms: 699.9608
+  type: 'test'
+  ...
+# Subtest: missing credentials fail locally without external requests
+ok 31 - missing credentials fail locally without external requests
+  ---
+  duration_ms: 2.7571
+  type: 'test'
+  ...
+# Subtest: Google refresh sends confidential values only to fixed token endpoint
+ok 32 - Google refresh sends confidential values only to fixed token endpoint
+  ---
+  duration_ms: 32.0655
+  type: 'test'
+  ...
+# Subtest: Drive multipart retains binary bytes and explicit folder binding
+ok 33 - Drive multipart retains binary bytes and explicit folder binding
+  ---
+  duration_ms: 3.1905
+  type: 'test'
+  ...
+# Subtest: Drive rejects oversized and active content before token exchange
+ok 34 - Drive rejects oversized and active content before token exchange
+  ---
+  duration_ms: 0.5527
+  type: 'test'
+  ...
+# Subtest: Calendar derives stable event id and sends no attendee emails
+ok 35 - Calendar derives stable event id and sends no attendee emails
+  ---
+  duration_ms: 35.3308
+  type: 'test'
+  ...
+# Subtest: Calendar rejects reversed and timezone-less date ranges
+ok 36 - Calendar rejects reversed and timezone-less date ranges
+  ---
+  duration_ms: 0.6852
+  type: 'test'
+  ...
+# Subtest: Gmail encodes MIME and rejects CRLF header injection
+ok 37 - Gmail encodes MIME and rejects CRLF header injection
+  ---
+  duration_ms: 2.4087
+  type: 'test'
+  ...
+# Subtest: quiet hours cross midnight and respect workspace timezone
+ok 38 - quiet hours cross midnight and respect workspace timezone
+  ---
+  duration_ms: 2.0077
+  type: 'test'
+  ...
+# Subtest: LINE uses bound recipient and deterministic valid retry UUID
+ok 39 - LINE uses bound recipient and deterministic valid retry UUID
+  ---
+  duration_ms: 3.3537
+  type: 'test'
+  ...
+# Subtest: OpenAI sends bounded text with store:false and parses output blocks
+ok 40 - OpenAI sends bounded text with store:false and parses output blocks
+  ---
+  duration_ms: 2.1169
+  type: 'test'
+  ...
+# Subtest: STT builds multipart request only for explicitly supplied supported audio
+ok 41 - STT builds multipart request only for explicitly supplied supported audio
+  ---
+  duration_ms: 2.3073
+  type: 'test'
+  ...
+# Subtest: provider errors never reflect secrets and uncertain writes stay uncertain
+ok 42 - provider errors never reflect secrets and uncertain writes stay uncertain
+  ---
+  duration_ms: 2.2349
+  type: 'test'
+  ...
+1..42
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2858.0986
+
+> lucky-note@0.1.0 build C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> npm run build:server && vite build
+
+
+> lucky-note@0.1.0 build:server C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> tsc -p tsconfig.server.json
+
+vite v7.3.7 building client environment for production...
+transforming...
+??39 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.63 kB ??gzip:   0.45 kB
+dist/assets/index-nLIFw6yy.css   69.94 kB ??gzip:  14.25 kB
+dist/assets/index-Bb89uGjQ.js   338.03 kB ??gzip: 108.56 kB
+??built in 1.77s

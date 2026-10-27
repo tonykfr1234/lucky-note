@@ -1,0 +1,17 @@
+
+> lucky-note@0.1.0 build C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> npm run build:server && vite build
+
+
+> lucky-note@0.1.0 build:server C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> tsc -p tsconfig.server.json
+
+vite v7.3.7 building client environment for production...
+transforming...
+??39 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.61 kB ??gzip:   0.44 kB
+dist/assets/index-W8GFQKKK.css   49.27 kB ??gzip:  11.15 kB
+dist/assets/index-CgPpzLdY.js   331.61 kB ??gzip: 106.37 kB
+??built in 1.85s

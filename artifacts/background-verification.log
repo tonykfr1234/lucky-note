@@ -1,0 +1,166 @@
+{
+  "images": 20,
+  "bytes": 773852,
+  "checks": [
+    {
+      "file": "background-01.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-01-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-02.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-02-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-03.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-03-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-04.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-04-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-05.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-05-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-06.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-06-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-07.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-07-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-08.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-08-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-09.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-09-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-10.webp",
+      "size": [
+        1672,
+        941
+      ],
+      "sha256": "match"
+    },
+    {
+      "file": "background-10-thumb.webp",
+      "size": [
+        320,
+        180
+      ],
+      "sha256": "match"
+    }
+  ]
+}

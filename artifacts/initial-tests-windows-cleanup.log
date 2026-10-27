@@ -1,0 +1,283 @@
+
+> lucky-note@0.1.0 test C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> npm run build:server && node scripts/test.mjs
+
+
+> lucky-note@0.1.0 build:server C:\Users\tonyk\Documents\Codex\2026-10-27\task\gathernote
+> tsc -p tsconfig.server.json
+
+TAP version 13
+# (node:12536) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: registration, empty states, password validation, session flags and logout
+ok 1 - registration, empty states, password validation, session flags and logout
+  ---
+  duration_ms: 447.3281
+  type: 'test'
+  ...
+# Subtest: private and other-group notes, files, export, members, events and expenses are inaccessible
+not ok 2 - private and other-group notes, files, export, members, events and expenses are inaccessible
+  ---
+  duration_ms: 239.2171
+  type: 'test'
+  location: 'C:\\Users\\tonyk\\Documents\\Codex\\2026-10-27\\task\\gathernote\\build\\tests\\core.test.js:87:1'
+  failureType: 'testCodeFailure'
+  error: "ENOTEMPTY: directory not empty, rmdir 'C:\\Users\\tonyk\\AppData\\Local\\Temp\\gathernote-test-3Yc9FY'"
+  code: 'ENOTEMPTY'
+  stack: |-
+    Object.rmdirSync (node:fs:1201:11)
+    _rmdirSync (node:internal/fs/rimraf:261:21)
+    rimrafSync (node:internal/fs/rimraf:194:7)
+    rmSync (node:fs:1247:10)
+    Object.cleanup (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/build/tests/core.test.js:60:164)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (file:///C:/Users/tonyk/Documents/Codex/2026-10-27/task/gathernote/build/tests/core.test.js:106:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: viewer cannot mutate; owner can change roles and revoke membership immediately
+ok 3 - viewer cannot mutate; owner can change roles and revoke membership immediately
+  ---
+  duration_ms: 215.1796
+  type: 'test'
+  ...
+# Subtest: optimistic concurrency does not overwrite a more recent edit or delete a new version
+ok 4 - optimistic concurrency does not overwrite a more recent edit or delete a new version
+  ---
+  duration_ms: 146.6521
+  type: 'test'
+  ...
+# Subtest: creation and notebook creation deduplicate; changing an idempotency payload is rejected
+ok 5 - creation and notebook creation deduplicate; changing an idempotency payload is rejected
+  ---
+  duration_ms: 144.1062
+  type: 'test'
+  ...
+# Subtest: notebook cannot cross workspace boundary even for an owner of both
+ok 6 - notebook cannot cross workspace boundary even for an owner of both
+  ---
+  duration_ms: 131.5847
+  type: 'test'
+  ...
+# Subtest: attachments validate MIME/signature, deduplicate, serve range with ACL and remove with note
+ok 7 - attachments validate MIME/signature, deduplicate, serve range with ACL and remove with note
+  ---
+  duration_ms: 145.6503
+  type: 'test'
+  ...
+# Subtest: CSRF and malicious Origin are rejected while same-origin requests work
+ok 8 - CSRF and malicious Origin are rejected while same-origin requests work
+  ---
+  duration_ms: 118.3795
+  type: 'test'
+  ...
+# Subtest: integer expense split conserves total, is deterministic and rejects foreign members/currency
+ok 9 - integer expense split conserves total, is deterministic and rejects foreign members/currency
+  ---
+  duration_ms: 258.4746
+  type: 'test'
+  ...
+# Subtest: settlement only changes balances after recipient confirms, and repeated confirm is harmless
+ok 10 - settlement only changes balances after recipient confirms, and repeated confirm is harmless
+  ---
+  duration_ms: 196.2297
+  type: 'test'
+  ...
+# Subtest: export/import restores notes and notebooks once, excludes secrets and rolls back invalid archive
+ok 11 - export/import restores notes and notebooks once, excludes secrets and rolls back invalid archive
+  ---
+  duration_ms: 133.5157
+  type: 'test'
+  ...
+# Subtest: SSE delivers edits to an authorized member and closes when membership is revoked
+ok 12 - SSE delivers edits to an authorized member and closes when membership is revoked
+  ---
+  duration_ms: 207.4116
+  type: 'test'
+  ...
+# Subtest: notes, attachments and idempotency survive server restart with no duplicate records
+ok 13 - notes, attachments and idempotency survive server restart with no duplicate records
+  ---
+  duration_ms: 140.9077
+  type: 'test'
+  ...
+# Subtest: production configuration fails closed; local-auth requires explicit production opt-in
+ok 14 - production configuration fails closed; local-auth requires explicit production opt-in
+  ---
+  duration_ms: 1.8444
+  type: 'test'
+  ...
+# Subtest: large handwritten content and plain HTML-like text round-trip without server execution
+ok 15 - large handwritten content and plain HTML-like text round-trip without server execution
+  ---
+  duration_ms: 155.9429
+  type: 'test'
+  ...
+# (node:40632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: integration status requires authentication and never exposes server secrets
+ok 16 - integration status requires authentication and never exposes server secrets
+  ---
+  duration_ms: 6.7343
+  type: 'test'
+  ...
+# Subtest: private workspaces and non-owners cannot export through provider routes
+ok 17 - private workspaces and non-owners cannot export through provider routes
+  ---
+  duration_ms: 2.9271
+  type: 'test'
+  ...
+# Subtest: external preview does not send; missing confirmation and credentials fail honestly
+ok 18 - external preview does not send; missing confirmation and credentials fail honestly
+  ---
+  duration_ms: 3.3877
+  type: 'test'
+  ...
+# Subtest: external confirmation is idempotent and rejects reuse of the mutation key for changed content
+ok 19 - external confirmation is idempotent and rejects reuse of the mutation key for changed content
+  ---
+  duration_ms: 35.4402
+  type: 'test'
+  ...
+# Subtest: uncertain external outcome blocks all automatic retries including a fresh matching preview
+ok 20 - uncertain external outcome blocks all automatic retries including a fresh matching preview
+  ---
+  duration_ms: 2.6553
+  type: 'test'
+  ...
+# Subtest: external confirmation rechecks current provider binding against the preview
+ok 21 - external confirmation rechecks current provider binding against the preview
+  ---
+  duration_ms: 1.9992
+  type: 'test'
+  ...
+# Subtest: AI previews explicit metadata only, respects cutoff timezone, and blocks empty/foreign/duplicate selections
+ok 22 - AI previews explicit metadata only, respects cutoff timezone, and blocks empty/foreign/duplicate selections
+  ---
+  duration_ms: 29.5819
+  type: 'test'
+  ...
+# Subtest: AI missing credentials never calls provider or consumes budget
+ok 23 - AI missing credentials never calls provider or consumes budget
+  ---
+  duration_ms: 2.3722
+  type: 'test'
+  ...
+# Subtest: AI suggestion requires a second explicit classification; repeated calls do not double charge or apply
+ok 24 - AI suggestion requires a second explicit classification; repeated calls do not double charge or apply
+  ---
+  duration_ms: 4.32
+  type: 'test'
+  ...
+# Subtest: AI stale preview cannot overwrite a concurrently edited note and daily budget is enforced
+ok 25 - AI stale preview cannot overwrite a concurrently edited note and daily budget is enforced
+  ---
+  duration_ms: 5.9629
+  type: 'test'
+  ...
+# Subtest: translation idempotency is user scoped and a second member cannot receive another user result
+ok 26 - translation idempotency is user scoped and a second member cannot receive another user result
+  ---
+  duration_ms: 3.3444
+  type: 'test'
+  ...
+# Subtest: Google OAuth is explicitly unavailable without configuration
+ok 27 - Google OAuth is explicitly unavailable without configuration
+  ---
+  duration_ms: 1.031
+  type: 'test'
+  ...
+# Subtest: Google OAuth starts with PKCE and limited scopes; cancellation consumes one-time state
+ok 28 - Google OAuth starts with PKCE and limited scopes; cancellation consumes one-time state
+  ---
+  duration_ms: 2.0171
+  type: 'test'
+  ...
+# Subtest: Google OIDC verifies signature audience nonce and matching userinfo using mocked official endpoints
+ok 29 - Google OIDC verifies signature audience nonce and matching userinfo using mocked official endpoints
+  ---
+  duration_ms: 129.3705
+  type: 'test'
+  ...
+# Subtest: missing credentials fail locally without external requests
+ok 30 - missing credentials fail locally without external requests
+  ---
+  duration_ms: 2.0467
+  type: 'test'
+  ...
+# Subtest: Google refresh sends confidential values only to fixed token endpoint
+ok 31 - Google refresh sends confidential values only to fixed token endpoint
+  ---
+  duration_ms: 31.0006
+  type: 'test'
+  ...
+# Subtest: Drive multipart retains binary bytes and explicit folder binding
+ok 32 - Drive multipart retains binary bytes and explicit folder binding
+  ---
+  duration_ms: 2.9469
+  type: 'test'
+  ...
+# Subtest: Drive rejects oversized and active content before token exchange
+ok 33 - Drive rejects oversized and active content before token exchange
+  ---
+  duration_ms: 0.488
+  type: 'test'
+  ...
+# Subtest: Calendar derives stable event id and sends no attendee emails
+ok 34 - Calendar derives stable event id and sends no attendee emails
+  ---
+  duration_ms: 30.2816
+  type: 'test'
+  ...
+# Subtest: Calendar rejects reversed and timezone-less date ranges
+ok 35 - Calendar rejects reversed and timezone-less date ranges
+  ---
+  duration_ms: 0.4989
+  type: 'test'
+  ...
+# Subtest: Gmail encodes MIME and rejects CRLF header injection
+ok 36 - Gmail encodes MIME and rejects CRLF header injection
+  ---
+  duration_ms: 2.3064
+  type: 'test'
+  ...
+# Subtest: quiet hours cross midnight and respect workspace timezone
+ok 37 - quiet hours cross midnight and respect workspace timezone
+  ---
+  duration_ms: 1.6893
+  type: 'test'
+  ...
+# Subtest: LINE uses bound recipient and deterministic valid retry UUID
+ok 38 - LINE uses bound recipient and deterministic valid retry UUID
+  ---
+  duration_ms: 3.1414
+  type: 'test'
+  ...
+# Subtest: OpenAI sends bounded text with store:false and parses output blocks
+ok 39 - OpenAI sends bounded text with store:false and parses output blocks
+  ---
+  duration_ms: 1.4656
+  type: 'test'
+  ...
+# Subtest: STT builds multipart request only for explicitly supplied supported audio
+ok 40 - STT builds multipart request only for explicitly supplied supported audio
+  ---
+  duration_ms: 1.8173
+  type: 'test'
+  ...
+# Subtest: provider errors never reflect secrets and uncertain writes stay uncertain
+ok 41 - provider errors never reflect secrets and uncertain writes stay uncertain
+  ---
+  duration_ms: 1.3308
+  type: 'test'
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 40
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2879.7319
+npm ERR! Test failed.  See above for more details.

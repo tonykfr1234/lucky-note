@@ -1,0 +1,21 @@
+services:
+  lucky-note:
+    build: .
+    ports:
+      - "127.0.0.1:4317:4317"
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      DATA_DIR: /data
+    volumes:
+      - lucky-note-data:/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  lucky-note-data:

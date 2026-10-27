@@ -1,0 +1,282 @@
+[
+  {
+    "id": "01",
+    "label": "misty forest",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background image for a notebook desktop app, not a screenshot or mockup. Create one wide 16:9 minimal atmospheric misty evergreen forest backdrop. Very soft layered pine silhouettes near the lower edges, desaturated sage and deep eucalyptus, subtle fine grain, generous nearly empty softly misted central area, low local contrast behind text panels. Elegant calm painterly photographic hybrid. Full bleed image. No text, logos, watermarks, people, animals, interface controls or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "霧林",
+    "suggested_theme": "light",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-01.png",
+    "original_sha256": "aa6f6bd8393177def83cb9fd95ad90f426511164d428feeccceda6ddb1a2410b",
+    "file": "background-01.webp",
+    "thumbnail": "background-01-thumb.webp",
+    "url": "/backgrounds/background-01.webp",
+    "thumbnail_url": "/backgrounds/background-01-thumb.webp",
+    "image_bytes": 64082,
+    "image_sha256": "4568fb9d1b3d55b548e0658e42c8ba4d3fc0dc14f8a0c4665f07d670406ddb6c",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 2850,
+    "thumbnail_sha256": "407e7d606665a77e9a18c7da260c486dd747b3615b6562cc57b1d4331af824cb",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "02",
+    "label": "quiet ocean",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: abstract ocean horizon and softly layered sea glass waves, pale teal and mist blue, spacious softly blurred central sky. Premium tasteful minimal atmospheric quiet ocean backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "靜海",
+    "suggested_theme": "light",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-02.png",
+    "original_sha256": "ec07162a14ffd64cff2f1f26c14e1c0f0e5371c099c13e79fa8bdecaf4ab0053",
+    "file": "background-02.webp",
+    "thumbnail": "background-02-thumb.webp",
+    "url": "/backgrounds/background-02.webp",
+    "thumbnail_url": "/backgrounds/background-02-thumb.webp",
+    "image_bytes": 49232,
+    "image_sha256": "9044c5e481b9aa68e17ef6b2df09a743362c727b2da06c2d3623bfff47583391",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 2826,
+    "thumbnail_sha256": "7cc125f5997f6a813dc495c33193017f6e6d3806a82602a902ee837fd7e8080a",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "03",
+    "label": "peach dawn",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: a barely perceptible dawn horizon with low rolling hills at the very bottom, pale peach apricot and dusty blush, expansive creamy sky. Premium tasteful minimal atmospheric peach dawn backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "晨曦",
+    "suggested_theme": "light",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-03.png",
+    "original_sha256": "afaec71b5a8b52c17aa31815e80eb5e8f604106403697770e6c6c99e26f68ae4",
+    "file": "background-03.webp",
+    "thumbnail": "background-03-thumb.webp",
+    "url": "/backgrounds/background-03.webp",
+    "thumbnail_url": "/backgrounds/background-03-thumb.webp",
+    "image_bytes": 14288,
+    "image_sha256": "5d02654f6161c22c994dc8256697f14da2ae7a40e10580e8170f1b112e27b849",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 1044,
+    "thumbnail_sha256": "95bca3a8c32ed580154143173db482f36a59460e1863b612fb8560b031607391",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "04",
+    "label": "violet nebula",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: ethereal deep violet and midnight indigo nebula haze, extremely sparse faint tiny stars at edges, broad empty smooth dark middle. Premium tasteful minimal atmospheric violet nebula backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "紫星雲",
+    "suggested_theme": "dark",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-04.png",
+    "original_sha256": "18709bc9cb4c22f6376e035ece6db59ffea2d7208af94f38b18d0ecc12231d63",
+    "file": "background-04.webp",
+    "thumbnail": "background-04-thumb.webp",
+    "url": "/backgrounds/background-04.webp",
+    "thumbnail_url": "/backgrounds/background-04-thumb.webp",
+    "image_bytes": 36210,
+    "image_sha256": "26b8e8a58a17279236b062dc1331f0778e6af80dccc488bede89c2d0795fa71b",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 1738,
+    "thumbnail_sha256": "2d5fcd29468d59b951f0cbeac487088d5e509110a9b6f381291ba320f5627866",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "05",
+    "label": "ink wash",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: East Asian inspired abstract ink wash mountains along the lower corners, cool gray ink on warm ivory handmade paper, generous blank central area. Premium tasteful minimal atmospheric ink wash backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "水墨山",
+    "suggested_theme": "light",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-05.png",
+    "original_sha256": "09f25c335e6ca7f2db915c5bf37a1d2340a9f8c89d4eeca34cc5d29dea51c528",
+    "file": "background-05.webp",
+    "thumbnail": "background-05-thumb.webp",
+    "url": "/backgrounds/background-05.webp",
+    "thumbnail_url": "/backgrounds/background-05-thumb.webp",
+    "image_bytes": 72164,
+    "image_sha256": "c1e12b8395ec15b0ca8344de7dd92ac0e8553790a4d62c42032772afe3308afa",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 1708,
+    "thumbnail_sha256": "c2f4ae558c120507a9f62e85deeb00b61959405c85e9b4d9833a5e8e9e1d8150",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "06",
+    "label": "natural linen",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: macro abstract warm oatmeal linen fabric, exceptionally subtle softly irregular woven texture, flat diffuse lighting, no folds or objects. Premium tasteful minimal atmospheric natural linen backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "亞麻",
+    "suggested_theme": "light",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-06.png",
+    "original_sha256": "6792e05e386611216bb9743b53a85087ae2571c139a0fd92d412bf68ff408f87",
+    "file": "background-06.webp",
+    "thumbnail": "background-06-thumb.webp",
+    "url": "/backgrounds/background-06.webp",
+    "thumbnail_url": "/backgrounds/background-06-thumb.webp",
+    "image_bytes": 386338,
+    "image_sha256": "4dda2161f399210b85987b9ac8e8e910341321605e6713feb0b830fcc9529d14",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 1502,
+    "thumbnail_sha256": "f58b663a9fa7c04f78acf987c385b2788cd5a0680ec403ac0c014c849abddc93",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "07",
+    "label": "desert dunes",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: minimal distant flowing desert dunes along the lower third, muted terracotta sand and warm cream, expansive quiet sky. Premium tasteful minimal atmospheric desert dunes backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "沙丘",
+    "suggested_theme": "light",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-07.png",
+    "original_sha256": "9d7472386234bacca2acaa327255c8f71d4b162fb947194f09baec9a812336de",
+    "file": "background-07.webp",
+    "thumbnail": "background-07-thumb.webp",
+    "url": "/backgrounds/background-07.webp",
+    "thumbnail_url": "/backgrounds/background-07-thumb.webp",
+    "image_bytes": 18850,
+    "image_sha256": "391a58e49cc27ae0e9e2747778f81c093f99f946828bd6b3589a5a002e4a1154",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 1254,
+    "thumbnail_sha256": "f22b013768bea3fb81b07fdfc188812dffacea431876c2af4269b01b6e457f3f",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "08",
+    "label": "city bokeh",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: very defocused distant city lights at night along bottom edge, subtle amber teal bokeh in deep navy, mostly quiet dark middle and upper area. Premium tasteful minimal atmospheric city bokeh backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "城市微光",
+    "suggested_theme": "dark",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-08.png",
+    "original_sha256": "a7d603e2da1f0ef3e60a4e026c86913b0ba8db8e90e168f3d0a7d94fd138357b",
+    "file": "background-08.webp",
+    "thumbnail": "background-08-thumb.webp",
+    "url": "/backgrounds/background-08.webp",
+    "thumbnail_url": "/backgrounds/background-08-thumb.webp",
+    "image_bytes": 24330,
+    "image_sha256": "51cd5e58327f73cc95abb3c211129ef6858b58b623d0683f292f0258d1bfdbed",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 2542,
+    "thumbnail_sha256": "7f069c4a1126165dc43d8873f73f5ecbd184caf61099cb3934f15ac80ebd6a88",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "09",
+    "label": "cotton paper",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: clean ivory cotton paper with softly visible organic fibers and very gentle pearl gray edge shading, no lines or stains. Premium tasteful minimal atmospheric cotton paper backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "棉紙",
+    "suggested_theme": "light",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-09.png",
+    "original_sha256": "cf52539a676d3334424f792c480ef66415d1ee4562462a70b2e827e153685796",
+    "file": "background-09.webp",
+    "thumbnail": "background-09-thumb.webp",
+    "url": "/backgrounds/background-09.webp",
+    "thumbnail_url": "/backgrounds/background-09-thumb.webp",
+    "image_bytes": 72408,
+    "image_sha256": "0b0abf74babff8483dc35a19810f4c0830d9a90d8b969568274f35820b07fa9a",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 418,
+    "thumbnail_sha256": "5b4a16fc997f9b371347402ddc75ea22b23c163e9c8f0e83dd2b051a8864945a",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  },
+  {
+    "id": "10",
+    "label": "quiet aurora",
+    "prompt": "Use case: stylized-concept. Asset type: standalone selectable background raster for a notebook desktop app, not a UI screenshot or mockup. Create exactly one full-bleed wide 16:9 image: restrained diffuse teal green aurora ribbons near upper corners over deep blue night, tiny distant mountain silhouettes at bottom, broad quiet dark center. Premium tasteful minimal atmospheric quiet aurora backdrop, low saturation and very low local contrast for readable overlaid UI panels, subtle natural grain, generous negative space. No text, logos, watermarks, people, animals, interface controls, symbols or borders.",
+    "width": 1672,
+    "height": 941,
+    "label_zh": "靜謐極光",
+    "suggested_theme": "dark",
+    "provenance": "Created with built-in OpenAI image_gen on 2026-10-27; no reference image supplied.",
+    "original_file": "background-10.png",
+    "original_sha256": "cd870fdfc7f7970735f3c476f010093cd2fd50ba982ed966d1ea939d1b2d2a1d",
+    "file": "background-10.webp",
+    "thumbnail": "background-10-thumb.webp",
+    "url": "/backgrounds/background-10.webp",
+    "thumbnail_url": "/backgrounds/background-10-thumb.webp",
+    "image_bytes": 18566,
+    "image_sha256": "860470b177322ad6b70a6c3d128e570fb16cc02ab273a1ef881b0340cdce3605",
+    "image_dimensions": [
+      1672,
+      941
+    ],
+    "thumbnail_bytes": 1502,
+    "thumbnail_sha256": "b3f652448ef4e022a6e6a4d2bd3ac8e74dbc3fdb9e62737b5f4533728463067f",
+    "thumbnail_dimensions": [
+      320,
+      180
+    ]
+  }
+]
