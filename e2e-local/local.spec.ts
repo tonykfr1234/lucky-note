@@ -26,6 +26,8 @@ test('device build works without account, persists rich text and never contacts 
   await expect(editor.locator('strong').first()).toContainText('Device-only saved content');
   await expect(page.locator('.collaboration-status')).toHaveAttribute('data-state','synced');
   await page.getByRole('button',{name:'Save',exact:true}).click();
+  // Disabled also means "busy". Only the completed transaction is safe to reload.
+  await expect(page.locator('.sync-state')).toHaveAttribute('data-state','saved');
   await expect(page.getByRole('button',{name:'Save',exact:true})).toBeDisabled();
   await page.reload(); await page.getByRole('button',{name:/Offline travel notebook/}).click();
   await expect(editor.locator('strong').first()).toContainText('Device-only saved content');

@@ -152,3 +152,29 @@
 .local-mode-banner small{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
 /* Keep a closed drawer non-interactive and invisible during responsive breakpoint transitions. */
 @media(max-width:650px), (max-height:560px) and (max-width:1000px) and (orientation:landscape){.sidebar:not(.open){visibility:hidden;pointer-events:none}.sidebar.open{visibility:visible;pointer-events:auto}}
+
+/* Comfortable Web targets and a consistent keyboard focus ring. */
+:root{--primary-ink:var(--primary)}
+[data-theme=dark]{--primary-ink:#b9d6a2}
+:is(button,a,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--primary-ink);outline-offset:3px}
+.collaborative-content:focus-visible{outline-color:var(--primary-ink)}
+.collaborative-content a,.gallery-background-option>svg,.rich-toolbar button:hover:not(:disabled),.rich-toolbar button.active{color:var(--primary-ink)}
+.collaborative-content blockquote,.gallery-background-option.selected{border-color:var(--primary-ink)}
+.rich-toolbar{gap:8px}
+.rich-toolbar button,.rich-toolbar select{min-width:44px;min-height:44px}
+.rich-toolbar .toolbar-divider{margin:0}
+.sync-state{line-height:1.5;overflow-wrap:anywhere}
+.note-title-input,.card-excerpt,.template-card p{min-width:0}
+@media(max-width:650px), (max-height:560px) and (max-width:1000px) and (orientation:landscape){
+  .icon-button,.header-actions .icon-button,.breadcrumb .mobile-menu,.editor-topbar .icon-button,.attachment-meta .icon-button{min-width:44px;min-height:44px;width:44px;height:44px;flex-shrink:0}
+  .button,.button.small,.toolbar-group button,.filter-tags button,.segmented button,.main-nav button,.notebook-nav button,.view-toggle button{min-width:44px;min-height:44px}
+  .header-actions{gap:4px}.breadcrumb{min-width:0;flex:1}.breadcrumb>span,.breadcrumb strong{overflow:hidden;text-overflow:ellipsis}
+  .collection-toolbar{flex-wrap:wrap}.collection-toolbar .search-box{flex:1 1 100%}.collection-actions{margin-left:auto;gap:8px}.view-toggle{gap:4px}
+  .editor-topbar{height:auto;min-height:60px;gap:8px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+  .editor-topbar .sync-state{min-width:0;flex:1}.editor-topbar .button{flex-shrink:0;min-height:44px}
+  .document-cover{height:56px;flex-shrink:0}.document-cover>svg{width:28px;height:28px}
+  .rich-toolbar{gap:8px;padding:8px}.rich-toolbar button,.rich-toolbar select{min-width:44px;min-height:44px}.rich-toolbar .toolbar-divider{display:none}
+  .note-properties input,.note-properties select{min-height:44px}
+  .collaborative-content li[data-type=taskItem]>label{min-width:44px;min-height:44px;align-items:center;justify-content:center;padding:0}
+  .collaborative-content li[data-type=taskItem]{gap:4px}
+}

@@ -19,6 +19,8 @@ LuckyNote is a self-hosted responsive web app and PWA, with a separate device-st
 
 ## Modes and publication status
 
+Local review: [2026-10-29 UI changes, validation and rollback](docs/UI_UX_2026-10-29.md). Before/after screenshots remain local pending separate disclosure approval. This record does not imply a push, deployment or a new passing remote CI run.
+
 | Mode | Where data lives | Available scope |
 | --- | --- | --- |
 | Self-hosted server / PWA | Your server's SQLite database and attachment directory | Accounts, private/group workspaces, collaboration and shared expenses; integrations require configuration |
